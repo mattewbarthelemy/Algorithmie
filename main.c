@@ -50,6 +50,7 @@ int main(void)
     maps[2] = CreateMap("The S", MAP_03);
     maps[3] = CreateMap("Make a Choice", MAP_04);
     maps[4] = CreateMap("The Maze", MAP_05);
+    maps[5] = CreateMap("06", MAP_06);
     // Add more maps as needed here
     
     ChangeMap(mapSelectionMenu, &maps[currentMap]);
@@ -90,8 +91,16 @@ int main(void)
                         SpawnBotAtStartCell(aiData->bot, aiData->grid);
                         if (AIMode)
                         {
-                            printf("AI is searching for a path !\n"); // Call function for Pathfinding here (if it need to precompute path)
+                            printf("AI is searching for a path !\n");
+
                             aiData->step = 0;
+
+                            bool found = SearchPath_AI(aiData->bot, aiData->grid);
+
+                            if (!found)
+                            {
+                                printf("No path found by AI\n");
+                            }
                         }
                         scene = GAME;
                         break;

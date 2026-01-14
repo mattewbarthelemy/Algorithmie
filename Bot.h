@@ -2,8 +2,11 @@
 
 #include <SFML/System.h>
 #include <SFML/Graphics.h>
+#include <stdbool.h>
 #include "basics.h"
 #include "grid.h"
+
+#define MAX_MOVES 1024
 
 struct Map;
 
@@ -28,8 +31,8 @@ struct Move
 struct Bot
 {
     sfVector2i position;
-    sfSprite *sprite;
-    struct Move MoveQueue[];
+    sfSprite* sprite;
+    struct Move MoveQueue[MAX_MOVES];
 };
 
 /// <summary>

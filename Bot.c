@@ -1,20 +1,23 @@
 #include "Bot.h"
-
-#include "map.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 
 struct Bot* CreateBot()
 {
     struct Bot* bot = (struct Bot*)malloc(sizeof(struct Bot));
-    
-    bot->position = (sfVector2i){0, 0};
-    
+    memset(bot, 0, sizeof(struct Bot));
+
+    bot->position = (sfVector2i){ 0, 0 };
+
     bot->sprite = sfSprite_create();
     sfTexture* tex = sfTexture_createFromFile("./Assets/Characters/Bot01.png", NULL);
     sfSprite_setTexture(bot->sprite, tex, sfTrue);
-    sfSprite_setPosition(bot->sprite, (sfVector2f){0, 0});
+
     float scale = ((float)CELL_SIZE / 24.f) * 0.75f;
-    sfSprite_setScale(bot->sprite, (sfVector2f){scale, scale});
-    
+    sfSprite_setScale(bot->sprite, (sfVector2f) { scale, scale });
+
+    bot->MoveQueue[0].type = INVALID;
     return bot;
 }
 
@@ -31,17 +34,16 @@ void SpawnBotAtStartCell(struct Bot* bot, Grid* grid)
                 startCelPosition.x += 5.f;
                 startCelPosition.y += 5.f;
                 sfSprite_setPosition(bot->sprite, startCelPosition);
-                break;
+                return;
             }
         }
     }
-    
 }
 
 void DestroyBot(struct Bot* bot)
 {
-    if (!bot->sprite) return;
-    sfSprite_destroy(bot->sprite);
+    if (!bot) return;
+    if (bot->sprite) sfSprite_destroy(bot->sprite);
     free(bot);
 }
 
@@ -53,78 +55,61 @@ void DrawBot(sfRenderWindow* window, struct Bot* bot)
 
 int MoveBot(struct Bot* bot, Grid* grid, enum MovementType type, enum Direction direction)
 {
-    int distance = 1;
-    if (type == JUMP) distance = 2;
-    
+    int distance = (type == JUMP) ? 2 : 1;
     sfVector2i newPosition = bot->position;
-    
+
     switch (direction)
     {
-    case NORTH:
-        if (newPosition.y > 0)
-        {
-            newPosition.y -= distance;
-        }
-        break;
-    case EAST:
-        if (newPosition.x < (GRID_COLS - 1))
-        {
-            newPosition.x += distance;
-        }
-        break;
-    case SOUTH:
-        if (newPosition.y < (GRID_ROWS - 1))
-        {
-            newPosition.y += distance;
-        }
-        break;
-    case WEST:
-        if (newPosition.x > 0)
-        {
-            newPosition.x -= distance;
-        }
-        break;
-    default:
-        break;
+    case NORTH: newPosition.y -= distance; break;
+    case EAST:  newPosition.x += distance; break;
+    case SOUTH: newPosition.y += distance; break;
+    case WEST:  newPosition.x -= distance; break;
+    default: break;
     }
 
-    enum CellType destinationCellType = grid->cell[newPosition.y][newPosition.x]->type;
+    enum CellType destinationCellType =
+        grid->cell[newPosition.y][newPosition.x]->type;
 
-    if (destinationCellType != OBSTACLE)
+    // ? Tombe dans le vide ? mort immédiate
+    if (destinationCellType == EMPTY)
     {
-        bot->position = newPosition;
-        sfVector2f newSpritePosition = sfSprite_getPosition(grid->cell[bot->position.y][bot->position.x]->sprite);
-        newSpritePosition.x += 5.f;
-        newSpritePosition.y += 5.f;
-        sfSprite_setPosition(bot->sprite, newSpritePosition);
-    } else
-    {
-        printf("can't go there ! \n");
+        return DEAD;
     }
 
-    switch (destinationCellType)
+    // ? Obstacle non franchissable
+    if (destinationCellType == OBSTACLE && type != JUMP)
     {
-    case END:
-        return REACH_END;
-    case EMPTY:
-        return FAILURE;
-    case START:
-    case WALKABLE:
-    case OBSTACLE:
-    default:
+        printf("can't go there !\n");
         return NOTHING;
     }
+
+    // ? Mouvement valide
+    bot->position = newPosition;
+
+    sfVector2f newSpritePosition =
+        sfSprite_getPosition(grid->cell[newPosition.y][newPosition.x]->sprite);
+    newSpritePosition.x += 5.f;
+    newSpritePosition.y += 5.f;
+    sfSprite_setPosition(bot->sprite, newSpritePosition);
+
+    // ? Résultat
+    if (destinationCellType == END)
+        return REACH_END;
+
+    return NOTHING;
 }
 
 void AddMovement(struct Bot* bot, enum MovementType type, enum Direction direction)
 {
     if (!bot) return;
-    // Add a new element Move to bot's MoveQueue
+
     int currentLength = 0;
-    while (bot->MoveQueue[currentLength].type == MOVE_TO || bot->MoveQueue[currentLength].type == JUMP)
+    while (bot->MoveQueue[currentLength].type != INVALID &&
+        currentLength < MAX_MOVES - 1)
     {
         currentLength++;
     }
+
     bot->MoveQueue[currentLength].type = type;
     bot->MoveQueue[currentLength].direction = direction;
     bot->MoveQueue[currentLength + 1].type = INVALID;
@@ -132,21 +117,102 @@ void AddMovement(struct Bot* bot, enum MovementType type, enum Direction directi
 
 void MoveBot_AI(struct GameData* data)
 {
-    if (!data->bot || !data->grid) return;
-    
-    while (data->bot->MoveQueue[data->step].type == MOVE_TO || data->bot->MoveQueue[data->step].type == JUMP)
+    if (!data || !data->bot || !data->grid) return;
+
+    while (data->bot->MoveQueue[data->step].type != INVALID)
     {
         sfSleep(sfMilliseconds(500));
-        enum MovementType type = data->bot->MoveQueue[data->step].type;
-        enum Direction direction = data->bot->MoveQueue[data->step].direction;
-        (data->step)++;
-        data->pathResult = MoveBot(data->bot, data->grid, type, direction);
+
+        enum MovementType type =
+            data->bot->MoveQueue[data->step].type;
+        enum Direction direction =
+            data->bot->MoveQueue[data->step].direction;
+
+        data->step++;
+        data->pathResult =
+            MoveBot(data->bot, data->grid, type, direction);
+
+        if (data->pathResult == REACH_END)
+            return;
     }
+}
+
+
+typedef struct
+{
+    bool visited;
+    bool tried[4];
+} AI_Cell;
+
+static const int dx[4] = { 0, 1, 0, -1 };
+static const int dy[4] = { -1, 0, 1, 0 };
+static const enum Direction dirs[4] =
+{
+    NORTH, EAST, SOUTH, WEST
+};
+
+static bool IsInside(int x, int y)
+{
+    return x >= 0 && x < GRID_COLS &&
+        y >= 0 && y < GRID_ROWS;
 }
 
 bool SearchPath_AI(struct Bot* bot, Grid* grid)
 {
-    // Implement pathfinding algorithm to fill bot's MoveQueue
-    return false;
-}
+    AI_Cell ai[GRID_ROWS][GRID_COLS] = { 0 };
+    sfVector2i stack[GRID_ROWS * GRID_COLS];
+    int stackTop = 0;
 
+    sfVector2i current = bot->position;
+    ai[current.y][current.x].visited = true;
+
+    while (1)
+    {
+        if (grid->cell[current.y][current.x]->type == END)
+            return true;
+
+        bool moved = false;
+
+        for (int d = 0; d < 4; d++)
+        {
+            if (ai[current.y][current.x].tried[d]) continue;
+            ai[current.y][current.x].tried[d] = true;
+
+            int nx = current.x + dx[d];
+            int ny = current.y + dy[d];
+
+            if (!IsInside(nx, ny)) continue;
+            if (ai[ny][nx].visited) continue;
+
+            enum CellType type = grid->cell[ny][nx]->type;
+            if (type == EMPTY) continue;
+
+            AddMovement(bot,
+                (type == OBSTACLE) ? JUMP : MOVE_TO,
+                dirs[d]);
+
+            stack[stackTop++] = current;
+            current = (sfVector2i){ nx, ny };
+            ai[ny][nx].visited = true;
+
+            moved = true;
+            break;
+        }
+
+        if (!moved)
+        {
+            if (stackTop == 0) return false;
+
+            sfVector2i prev = stack[--stackTop];
+            enum Direction back;
+
+            if (prev.x > current.x) back = EAST;
+            else if (prev.x < current.x) back = WEST;
+            else if (prev.y > current.y) back = SOUTH;
+            else back = NORTH;
+
+            AddMovement(bot, MOVE_TO, back);
+            current = prev;
+        }
+    }
+}
