@@ -121,7 +121,7 @@ void MoveBot_AI(struct GameData* data)
 
     while (data->bot->MoveQueue[data->step].type != INVALID)
     {
-        sfSleep(sfMilliseconds(500));
+        sfSleep(sfMilliseconds(100));
 
         enum MovementType type =
             data->bot->MoveQueue[data->step].type;
