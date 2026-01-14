@@ -127,6 +127,7 @@ void AddMovement(struct Bot* bot, enum MovementType type, enum Direction directi
     }
     bot->MoveQueue[currentLength].type = type;
     bot->MoveQueue[currentLength].direction = direction;
+    bot->MoveQueue[currentLength + 1].type = INVALID;
 }
 
 void MoveBot_AI(struct GameData* data)

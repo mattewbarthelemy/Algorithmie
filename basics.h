@@ -77,6 +77,7 @@ enum Direction
 /// </summary>
 enum MovementType
 {
+    INVALID,
     MOVE_TO,
     JUMP,
 };
