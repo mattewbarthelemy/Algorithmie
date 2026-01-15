@@ -70,20 +70,14 @@ int MoveBot(struct Bot* bot, Grid* grid, enum MovementType type, enum Direction 
     enum CellType destinationCellType =
         grid->cell[newPosition.y][newPosition.x]->type;
 
-    // ? Tombe dans le vide ? mort immédiate
+    
     if (destinationCellType == EMPTY)
     {
         return DEAD;
     }
 
-    // ? Obstacle non franchissable
-    if (destinationCellType == OBSTACLE && type != JUMP)
-    {
-        printf("can't go there !\n");
-        return NOTHING;
-    }
+  if (destinationCellType == OBSTACLE && type != JUMP)   return NOTHING;
 
-    // ? Mouvement valide
     bot->position = newPosition;
 
     sfVector2f newSpritePosition =
@@ -92,7 +86,7 @@ int MoveBot(struct Bot* bot, Grid* grid, enum MovementType type, enum Direction 
     newSpritePosition.y += 5.f;
     sfSprite_setPosition(bot->sprite, newSpritePosition);
 
-    // ? Résultat
+
     if (destinationCellType == END)
         return REACH_END;
 
