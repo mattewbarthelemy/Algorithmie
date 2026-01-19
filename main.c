@@ -87,7 +87,7 @@ int main(void)
                         ChangeMap(mapSelectionMenu, &maps[currentMap]);
                         break;
                     case sfKeyEnter:
-                        // Nettoyer l'ancienne grille
+                        // CORRECTION: Nettoyer l'ancienne grille avant d'en créer une nouvelle
                         if (aiData->grid != NULL)
                         {
                             DestroyGrid(aiData->grid);
@@ -97,7 +97,7 @@ int main(void)
                         aiData->grid = CreateGrid(maps[currentMap].data);
                         SpawnBotAtStartCell(aiData->bot, aiData->grid);
 
-                        // Réinitialiser l'état complet
+                        // CORRECTION: Réinitialiser complètement l'état du bot
                         aiData->bot->MoveQueue[0].type = INVALID;
                         aiData->step = 0;
                         aiData->pathResult = NOTHING;
@@ -140,7 +140,7 @@ int main(void)
                             }
                             break;
                         case sfKeyBackspace:
-                            // Nettoyer proprement au retour menu
+                            // CORRECTION: Nettoyer proprement le thread au retour au menu
                             if (threadLaunched)
                             {
                                 sfThread_terminate(aiThread);
@@ -170,34 +170,37 @@ int main(void)
                         {
                         case NO_MOVE_LEFT:
                             printf("No movement left\n");
-                            // Réinitialiser complètement
+                            // CORRECTION: Réinitialiser TOUTES les variables critiques
                             sfThread_terminate(aiThread);
                             threadLaunched = false;
                             AIMoveInProgess = false;
                             aiData->step = 0;
                             aiData->pathResult = NOTHING;
+                            aiData->bot->MoveQueue[0].type = INVALID;
                             scene = MAP_SELECTION;
                             break;
                         case DEAD:
                             printf("Bot is dead - Fell off the map!\n");
-                            // Réinitialiser complètement
+                            // CORRECTION: Réinitialiser TOUTES les variables critiques
                             sfThread_terminate(aiThread);
                             threadLaunched = false;
                             AIMoveInProgess = false;
                             aiData->step = 0;
                             aiData->pathResult = NOTHING;
+                            aiData->bot->MoveQueue[0].type = INVALID;
                             scene = MAP_SELECTION;
                             break;
                         case REACH_END:
                             printf("======================\n");
                             printf("SUCCESS! Bot reached the end!\n");
                             printf("======================\n\n");
-                            // Réinitialiser complètement
+                            // CORRECTION: Réinitialiser TOUTES les variables critiques
                             sfThread_terminate(aiThread);
                             threadLaunched = false;
                             AIMoveInProgess = false;
                             aiData->step = 0;
                             aiData->pathResult = NOTHING;
+                            aiData->bot->MoveQueue[0].type = INVALID;
                             scene = MAP_SELECTION;
                             break;
                         case NOTHING:
