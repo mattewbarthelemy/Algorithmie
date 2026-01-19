@@ -116,7 +116,7 @@ void MoveBot_AI(struct GameData* data)
     while (1)
     {
         while (!data->grid)
-            sfSleep(sfMilliseconds(50));
+            sfSleep(sfMilliseconds(200));
 
         data->step = 0;
         data->pathResult = NOTHING;
@@ -132,7 +132,7 @@ void MoveBot_AI(struct GameData* data)
         {
             while (data->bot->MoveQueue[data->step].type != INVALID)
             {
-                sfSleep(sfMilliseconds(120));
+                sfSleep(sfMilliseconds(180));
 
                 enum MovementType type =
                     data->bot->MoveQueue[data->step].type;
@@ -151,7 +151,7 @@ void MoveBot_AI(struct GameData* data)
         }
 
         while (data->pathResult != NOTHING)
-            sfSleep(sfMilliseconds(100));
+            sfSleep(sfMilliseconds(200));
     }
 }
 
