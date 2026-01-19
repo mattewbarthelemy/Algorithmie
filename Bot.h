@@ -107,3 +107,7 @@ void MoveBot_AI(struct GameData* data);
 /// <param name="grid">Pointer to the Grid structure.</param>
 /// <returns>True if a path is found, false otherwise.</returns>
 bool SearchPath_AI(struct Bot* bot, Grid* grid);
+
+void MoveBot_AI(struct GameData* data);
+
+void ResetBotAI(struct Bot* bot);

@@ -52,6 +52,7 @@ int main(void)
     maps[4] = CreateMap("The Maze", MAP_05);
     maps[5] = CreateMap("06", MAP_06);
     maps[6] = CreateMap("07", MAP_07);
+    maps[7] = CreateMap("08", MAP_08);
     // Add more maps as needed here
     
     ChangeMap(mapSelectionMenu, &maps[currentMap]);
@@ -92,16 +93,11 @@ int main(void)
                         SpawnBotAtStartCell(aiData->bot, aiData->grid);
                         if (AIMode)
                         {
-                            printf("AI is searching for a path !\n");
-
-                            aiData->step = 0;
-
-                            bool found = SearchPath_AI(aiData->bot, aiData->grid);
-
-                            if (!found)
                             {
-                                printf("No path found by AI\n");
+                                printf("AI is searching for a path !\n");
+                                ResetAIForNewLevel(aiData);
                             }
+
                         }
                         scene = GAME;
                         break;
@@ -133,12 +129,12 @@ int main(void)
                     }
                     if (AIMoveInProgess && scene == GAME)
                     {
-                        // Search for path if not done yet
+                        
                         
                         if (!threadLaunched)
                         {
+                            aiThread = sfThread_create(MoveBot_AI, aiData);
                             sfThread_launch(aiThread);
-                            threadLaunched = true;
                         }
                         
                         switch(aiData->pathResult)
@@ -244,3 +240,4 @@ int main(void)
 
     return SUCCESS;
 }
+
