@@ -3,6 +3,10 @@
 #include <stdio.h>
 #include <string.h>
 
+// ============================================================================
+// FONCTIONS DE BASE DU BOT
+// ============================================================================
+
 struct Bot* CreateBot()
 {
     struct Bot* bot = (struct Bot*)malloc(sizeof(struct Bot));
@@ -67,16 +71,22 @@ int MoveBot(struct Bot* bot, Grid* grid, enum MovementType type, enum Direction 
     default: break;
     }
 
+    if (newPosition.x < 0 || newPosition.x >= GRID_COLS ||
+        newPosition.y < 0 || newPosition.y >= GRID_ROWS)
+    {
+        return DEAD;
+    }
+
     enum CellType destinationCellType =
         grid->cell[newPosition.y][newPosition.x]->type;
 
-    
     if (destinationCellType == EMPTY)
     {
         return DEAD;
     }
 
-  if (destinationCellType == OBSTACLE && type != JUMP)   return NOTHING;
+    if (destinationCellType == OBSTACLE && type != JUMP)
+        return NOTHING;
 
     bot->position = newPosition;
 
@@ -85,7 +95,6 @@ int MoveBot(struct Bot* bot, Grid* grid, enum MovementType type, enum Direction 
     newSpritePosition.x += 5.f;
     newSpritePosition.y += 5.f;
     sfSprite_setPosition(bot->sprite, newSpritePosition);
-
 
     if (destinationCellType == END)
         return REACH_END;
@@ -104,6 +113,12 @@ void AddMovement(struct Bot* bot, enum MovementType type, enum Direction directi
         currentLength++;
     }
 
+    if (currentLength >= MAX_MOVES - 1)
+    {
+        printf("Warning: Movement queue is full!\n");
+        return;
+    }
+
     bot->MoveQueue[currentLength].type = type;
     bot->MoveQueue[currentLength].direction = direction;
     bot->MoveQueue[currentLength + 1].type = INVALID;
@@ -117,96 +132,272 @@ void MoveBot_AI(struct GameData* data)
     {
         sfSleep(sfMilliseconds(100));
 
-        enum MovementType type =
-            data->bot->MoveQueue[data->step].type;
-        enum Direction direction =
-            data->bot->MoveQueue[data->step].direction;
+        enum MovementType type = data->bot->MoveQueue[data->step].type;
+        enum Direction direction = data->bot->MoveQueue[data->step].direction;
 
         data->step++;
-        data->pathResult =
-            MoveBot(data->bot, data->grid, type, direction);
+        data->pathResult = MoveBot(data->bot, data->grid, type, direction);
 
-        if (data->pathResult == REACH_END)
+        if (data->pathResult == REACH_END || data->pathResult == DEAD)
             return;
     }
+
+    data->pathResult = NO_MOVE_LEFT;
 }
 
 
-typedef struct
-{
-    bool visited;
-    bool tried[4];
-} AI_Cell;
+// ============================================================================
+// ALGORITHME BFS AVEC COÛTS - ÉVITE LES OBSTACLES
+// ============================================================================
+
+// NOUVEAU: Coûts différenciés
+#define COST_MOVE 1      // Coût d'un mouvement normal
+#define COST_JUMP 10     // Coût d'un saut (obstacle = point faible)
 
 static const int dx[4] = { 0, 1, 0, -1 };
 static const int dy[4] = { -1, 0, 1, 0 };
-static const enum Direction dirs[4] =
-{
-    NORTH, EAST, SOUTH, WEST
-};
+static const enum Direction dirs[4] = { NORTH, EAST, SOUTH, WEST };
 
 static bool IsInside(int x, int y)
 {
-    return x >= 0 && x < GRID_COLS &&
-        y >= 0 && y < GRID_ROWS;
+    return x >= 0 && x < GRID_COLS && y >= 0 && y < GRID_ROWS;
 }
+
+// Structure pour la file BFS avec coût
+typedef struct
+{
+    sfVector2i position;
+    int cost;  // NOUVEAU: Coût total depuis le début
+} BFS_Node;
+
+typedef struct
+{
+    BFS_Node data[GRID_ROWS * GRID_COLS * 4];
+    int front;
+    int rear;
+} BFS_Queue;
+
+static void InitQueue(BFS_Queue* queue)
+{
+    queue->front = 0;
+    queue->rear = -1;
+}
+
+static bool IsQueueEmpty(BFS_Queue* queue)
+{
+    return queue->rear < queue->front;
+}
+
+static void Enqueue(BFS_Queue* queue, sfVector2i pos, int cost)
+{
+    if (queue->rear < GRID_ROWS * GRID_COLS * 4 - 1)
+    {
+        queue->rear++;
+        queue->data[queue->rear].position = pos;
+        queue->data[queue->rear].cost = cost;
+    }
+}
+
+static BFS_Node Dequeue(BFS_Queue* queue)
+{
+    return queue->data[queue->front++];
+}
+
+static bool PositionsEqual(sfVector2i a, sfVector2i b)
+{
+    return a.x == b.x && a.y == b.y;
+}
+
+// Structure pour stocker les informations de visite
+typedef struct
+{
+    bool visited;
+    int cost;           // NOUVEAU: Coût pour atteindre cette case
+    int jumpCount;      // NOUVEAU: Nombre de sauts pour atteindre cette case
+    int moveCount;      // NOUVEAU: Nombre de mouvements normaux
+    sfVector2i parent;
+    enum MovementType moveType;
+    enum Direction direction;
+} VisitInfo;
+
 
 bool SearchPath_AI(struct Bot* bot, Grid* grid)
 {
-    AI_Cell ai[GRID_ROWS][GRID_COLS] = { 0 };
-    sfVector2i stack[GRID_ROWS * GRID_COLS];
-    int stackTop = 0;
+    static VisitInfo visited[GRID_ROWS][GRID_COLS];
+    static BFS_Queue queue;
 
-    sfVector2i current = bot->position;
-    ai[current.y][current.x].visited = true;
-
-    while (1)
+    memset(visited, 0, sizeof(visited));
+    for (int i = 0; i < GRID_ROWS; i++)
     {
-        if (grid->cell[current.y][current.x]->type == END)
-            return true;
-
-        bool moved = false;
-
-        for (int d = 0; d < 4; d++)
+        for (int j = 0; j < GRID_COLS; j++)
         {
-            if (ai[current.y][current.x].tried[d]) continue;
-            ai[current.y][current.x].tried[d] = true;
-
-            int nx = current.x + dx[d];
-            int ny = current.y + dy[d];
-
-            if (!IsInside(nx, ny)) continue;
-            if (ai[ny][nx].visited) continue;
-
-            enum CellType type = grid->cell[ny][nx]->type;
-            if (type == EMPTY) continue;
-
-            AddMovement(bot,
-                (type == OBSTACLE) ? JUMP : MOVE_TO,
-                dirs[d]);
-
-            stack[stackTop++] = current;
-            current = (sfVector2i){ nx, ny };
-            ai[ny][nx].visited = true;
-
-            moved = true;
-            break;
-        }
-
-        if (!moved)
-        {
-            if (stackTop == 0) return false;
-
-            sfVector2i prev = stack[--stackTop];
-            enum Direction back;
-
-            if (prev.x > current.x) back = EAST;
-            else if (prev.x < current.x) back = WEST;
-            else if (prev.y > current.y) back = SOUTH;
-            else back = NORTH;
-
-            AddMovement(bot, MOVE_TO, back);
-            current = prev;
+            visited[i][j].cost = 999999; // Infini
         }
     }
+    InitQueue(&queue);
+
+    sfVector2i start = bot->position;
+    sfVector2i end = { -1, -1 };
+
+    for (int i = 0; i < GRID_ROWS; i++)
+    {
+        for (int j = 0; j < GRID_COLS; j++)
+        {
+            if (grid->cell[i][j]->type == END)
+            {
+                end.x = j;
+                end.y = i;
+                break;
+            }
+        }
+        if (end.x != -1) break;
+    }
+
+    if (end.x == -1)
+    {
+        printf("Error: No END cell found!\n");
+        return false;
+    }
+
+    printf("\n=== AI PATHFINDING (OBSTACLE AVOIDANCE) ===\n");
+    printf("Searching for path with MINIMUM obstacles...\n");
+
+    Enqueue(&queue, start, 0);
+    visited[start.y][start.x].visited = true;
+    visited[start.y][start.x].cost = 0;
+    visited[start.y][start.x].jumpCount = 0;
+    visited[start.y][start.x].moveCount = 0;
+
+    int nodesExplored = 0;
+    bool endReached = false;
+
+    // EXPLORATION AVEC MISE À JOUR DES COÛTS
+    while (!IsQueueEmpty(&queue))
+    {
+        BFS_Node current = Dequeue(&queue);
+        nodesExplored++;
+
+        if (PositionsEqual(current.position, end))
+        {
+            endReached = true;
+            // Continue quand même pour trouver un meilleur chemin si possible
+        }
+
+        // Explorer les 4 directions
+        for (int d = 0; d < 4; d++)
+        {
+            int nx = current.position.x + dx[d];
+            int ny = current.position.y + dy[d];
+
+            if (!IsInside(nx, ny)) continue;
+
+            enum CellType cellType = grid->cell[ny][nx]->type;
+
+            if (cellType == EMPTY)
+                continue;
+
+            // Case accessible (WALKABLE, START, END)
+            if (cellType == WALKABLE || cellType == START || cellType == END)
+            {
+                int newCost = current.cost + COST_MOVE;
+
+                // NOUVEAU: N'ajouter que si c'est un meilleur chemin
+                if (newCost < visited[ny][nx].cost)
+                {
+                    Enqueue(&queue, (sfVector2i) { nx, ny }, newCost);
+                    visited[ny][nx].visited = true;
+                    visited[ny][nx].cost = newCost;
+                    visited[ny][nx].jumpCount = visited[current.position.y][current.position.x].jumpCount;
+                    visited[ny][nx].moveCount = visited[current.position.y][current.position.x].moveCount + 1;
+                    visited[ny][nx].parent = current.position;
+                    visited[ny][nx].moveType = MOVE_TO;
+                    visited[ny][nx].direction = dirs[d];
+                }
+            }
+            // Obstacle - sauter (COÛT ÉLEVÉ)
+            else if (cellType == OBSTACLE)
+            {
+                int nx2 = current.position.x + dx[d] * 2;
+                int ny2 = current.position.y + dy[d] * 2;
+
+                if (!IsInside(nx2, ny2)) continue;
+
+                enum CellType cellType2 = grid->cell[ny2][ny2]->type;
+
+                if (cellType2 == WALKABLE || cellType2 == START || cellType2 == END)
+                {
+                    int newCost = current.cost + COST_JUMP; // COÛT ÉLEVÉ
+
+                    // NOUVEAU: N'ajouter que si c'est un meilleur chemin
+                    if (newCost < visited[ny2][nx2].cost)
+                    {
+                        Enqueue(&queue, (sfVector2i) { nx2, ny2 }, newCost);
+                        visited[ny2][nx2].visited = true;
+                        visited[ny2][nx2].cost = newCost;
+                        visited[ny2][nx2].jumpCount = visited[current.position.y][current.position.x].jumpCount + 1;
+                        visited[ny2][nx2].moveCount = visited[current.position.y][current.position.x].moveCount;
+                        visited[ny2][nx2].parent = current.position;
+                        visited[ny2][nx2].moveType = JUMP;
+                        visited[ny2][nx2].direction = dirs[d];
+                    }
+                }
+            }
+        }
+    }
+
+    printf("Exploration complete!\n");
+    printf("Nodes explored: %d\n", nodesExplored);
+
+    if (!endReached || !visited[end.y][end.x].visited)
+    {
+        printf("No path found to END!\n");
+        return false;
+    }
+
+    int accessibleCount = 0;
+    for (int i = 0; i < GRID_ROWS; i++)
+    {
+        for (int j = 0; j < GRID_COLS; j++)
+        {
+            if (visited[i][j].visited)
+                accessibleCount++;
+        }
+    }
+    printf("Accessible positions: %d / %d\n", accessibleCount, GRID_ROWS * GRID_COLS);
+
+    int finalCost = visited[end.y][end.x].cost;
+    int finalJumps = visited[end.y][end.x].jumpCount;
+    int finalMoves = visited[end.y][end.x].moveCount;
+    int totalMoves = finalJumps + finalMoves;
+
+    printf("\n=== OPTIMAL PATH FOUND ===\n");
+    printf("Total cost: %d\n", finalCost);
+    printf("Total moves: %d (%d MOVE + %d JUMP)\n", totalMoves, finalMoves, finalJumps);
+    printf("Obstacles crossed: %d\n", finalJumps);
+    printf("==========================\n\n");
+
+    // Reconstruire le chemin
+    sfVector2i path[MAX_MOVES];
+    enum MovementType moveTypes[MAX_MOVES];
+    enum Direction directions[MAX_MOVES];
+    int pathLength = 0;
+
+    sfVector2i current = end;
+
+    while (!PositionsEqual(current, start) && pathLength < MAX_MOVES)
+    {
+        path[pathLength] = current;
+        moveTypes[pathLength] = visited[current.y][current.x].moveType;
+        directions[pathLength] = visited[current.y][current.x].direction;
+        pathLength++;
+        current = visited[current.y][current.x].parent;
+    }
+
+    // Ajouter les mouvements (en ordre inverse)
+    for (int i = pathLength - 1; i >= 0; i--)
+    {
+        AddMovement(bot, moveTypes[i], directions[i]);
+    }
+
+    return true;
 }
