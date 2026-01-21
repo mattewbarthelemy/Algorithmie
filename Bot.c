@@ -145,7 +145,8 @@ void MoveBot_AI(struct GameData* data)
 
     while (data->bot->MoveQueue[data->step].type != INVALID)
     {
-        sfSleep(sfMilliseconds(100));
+        // CORRECTION: Réduire le sleep de 100ms à 50ms pour plus de réactivité
+        sfSleep(sfMilliseconds(50));
 
         enum MovementType type = data->bot->MoveQueue[data->step].type;
         enum Direction direction = data->bot->MoveQueue[data->step].direction;
@@ -153,7 +154,8 @@ void MoveBot_AI(struct GameData* data)
         data->step++;
         data->pathResult = MoveBot(data->bot, data->grid, type, direction);
 
-        // Sortir en cas de mort ou fin
+        // CORRECTION: Sortir IMMÉDIATEMENT en cas de mort ou fin
+        // Pas d'attente supplémentaire
         if (data->pathResult == REACH_END || data->pathResult == DEAD)
             return;
     }
@@ -175,7 +177,7 @@ static const enum Direction dirs[4] = { NORTH, EAST, SOUTH, WEST };
 // Fonction utilitaire
 static bool IsInside(int x, int y)
 {
-    return x >= 0 && x < GRID_COLS && y >= 0 && y < GRID_ROWS;
+    return x >= 0 && x < GRID_COLS&& y >= 0 && y < GRID_ROWS;
 }
 
 // Structure pour la file BFS avec coût

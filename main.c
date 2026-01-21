@@ -1,4 +1,4 @@
-#include <SFML/Audio.h>
+﻿#include <SFML/Audio.h>
 #include <SFML/Graphics.h>
 
 #include "basics.h"
@@ -87,20 +87,29 @@ int main(void)
                         ChangeMap(mapSelectionMenu, &maps[currentMap]);
                         break;
                     case sfKeyEnter:
-                        // CORRECTION: Nettoyer l'ancienne grille avant d'en cr�er une nouvelle
+                        // CORRECTION CRITIQUE: S'assurer que le thread est bien arrêté
+                        if (threadLaunched)
+                        {
+                            sfThread_terminate(aiThread);
+                            threadLaunched = false;
+                        }
+
+                        // CORRECTION: Nettoyer l'ancienne grille avant d'en créer une nouvelle
                         if (aiData->grid != NULL)
                         {
                             DestroyGrid(aiData->grid);
+                            aiData->grid = NULL;  // ← IMPORTANT: Mettre à NULL après destruction
                         }
 
-                        // Cr�er la nouvelle grille
+                        // Créer la nouvelle grille
                         aiData->grid = CreateGrid(maps[currentMap].data);
                         SpawnBotAtStartCell(aiData->bot, aiData->grid);
 
-                        // CORRECTION: R�initialiser compl�tement l'�tat du bot
+                        // CORRECTION: Réinitialiser complètement l'état du bot
                         aiData->bot->MoveQueue[0].type = INVALID;
                         aiData->step = 0;
                         aiData->pathResult = NOTHING;
+                        AIMoveInProgess = false;  // Reset du flag
 
                         if (AIMode)
                         {
@@ -140,13 +149,19 @@ int main(void)
                             }
                             break;
                         case sfKeyBackspace:
-                            // CORRECTION: Nettoyer proprement le thread au retour au menu
+                            // CORRECTION: Ordre optimisé + destruction de la grille
+                            AIMoveInProgess = false;
                             if (threadLaunched)
                             {
                                 sfThread_terminate(aiThread);
                                 threadLaunched = false;
                             }
-                            AIMoveInProgess = false;
+                            // CORRECTION: Détruire la grille quand on quitte
+                            if (aiData->grid != NULL)
+                            {
+                                DestroyGrid(aiData->grid);
+                                aiData->grid = NULL;
+                            }
                             aiData->step = 0;
                             aiData->pathResult = NOTHING;
                             printf("Returning to map selection...\n");
@@ -165,15 +180,24 @@ int main(void)
                             threadLaunched = true;
                         }
 
-                        // V�rifier le r�sultat
+                        // Vérifier le résultat
                         switch (aiData->pathResult)
                         {
                         case NO_MOVE_LEFT:
                             printf("No movement left\n");
-                            // CORRECTION: R�initialiser TOUTES les variables critiques
-                            sfThread_terminate(aiThread);
-                            threadLaunched = false;
+                            // CORRECTION: Ordre optimisé + destruction de la grille
                             AIMoveInProgess = false;
+                            if (threadLaunched)
+                            {
+                                sfThread_terminate(aiThread);
+                                threadLaunched = false;
+                            }
+                            // CORRECTION: Détruire la grille avant de retourner au menu
+                            if (aiData->grid != NULL)
+                            {
+                                DestroyGrid(aiData->grid);
+                                aiData->grid = NULL;
+                            }
                             aiData->step = 0;
                             aiData->pathResult = NOTHING;
                             aiData->bot->MoveQueue[0].type = INVALID;
@@ -181,10 +205,19 @@ int main(void)
                             break;
                         case DEAD:
                             printf("Bot is dead - Fell off the map!\n");
-                            // CORRECTION: R�initialiser TOUTES les variables critiques
-                            sfThread_terminate(aiThread);
-                            threadLaunched = false;
+                            // CORRECTION: Ordre optimisé + destruction de la grille
                             AIMoveInProgess = false;
+                            if (threadLaunched)
+                            {
+                                sfThread_terminate(aiThread);
+                                threadLaunched = false;
+                            }
+                            // CORRECTION: Détruire la grille avant de retourner au menu
+                            if (aiData->grid != NULL)
+                            {
+                                DestroyGrid(aiData->grid);
+                                aiData->grid = NULL;
+                            }
                             aiData->step = 0;
                             aiData->pathResult = NOTHING;
                             aiData->bot->MoveQueue[0].type = INVALID;
@@ -194,10 +227,19 @@ int main(void)
                             printf("======================\n");
                             printf("SUCCESS! Bot reached the end!\n");
                             printf("======================\n\n");
-                            // CORRECTION: R�initialiser TOUTES les variables critiques
-                            sfThread_terminate(aiThread);
-                            threadLaunched = false;
+                            // CORRECTION CRITIQUE: Ordre optimisé + destruction de la grille
                             AIMoveInProgess = false;
+                            if (threadLaunched)
+                            {
+                                sfThread_terminate(aiThread);
+                                threadLaunched = false;
+                            }
+                            // CORRECTION: Détruire la grille AVANT de retourner au menu
+                            if (aiData->grid != NULL)
+                            {
+                                DestroyGrid(aiData->grid);
+                                aiData->grid = NULL;  // ← ESSENTIEL: Mettre à NULL
+                            }
                             aiData->step = 0;
                             aiData->pathResult = NOTHING;
                             aiData->bot->MoveQueue[0].type = INVALID;
@@ -217,6 +259,12 @@ int main(void)
                         switch (event.key.code)
                         {
                         case sfKeyBackspace:
+                            // CORRECTION: Détruire la grille en mode manuel aussi
+                            if (aiData->grid != NULL)
+                            {
+                                DestroyGrid(aiData->grid);
+                                aiData->grid = NULL;
+                            }
                             scene = MAP_SELECTION;
                             break;
                         case sfKeyRight:
@@ -246,10 +294,22 @@ int main(void)
                         {
                         case DEAD:
                             printf("Unfortunately you fell off the parkour..\n");
+                            // CORRECTION: Détruire la grille en mode manuel
+                            if (aiData->grid != NULL)
+                            {
+                                DestroyGrid(aiData->grid);
+                                aiData->grid = NULL;
+                            }
                             scene = MAP_SELECTION;
                             break;
                         case REACH_END:
                             printf("Congratulations! You reached the end!\n");
+                            // CORRECTION: Détruire la grille en mode manuel
+                            if (aiData->grid != NULL)
+                            {
+                                DestroyGrid(aiData->grid);
+                                aiData->grid = NULL;
+                            }
                             scene = MAP_SELECTION;
                             break;
                         case NOTHING:
@@ -273,8 +333,12 @@ int main(void)
             DrawMapSelectionMenu(window, mapSelectionMenu);
             break;
         case GAME:
-            DrawGrid(window, aiData->grid);
-            DrawBot(window, aiData->bot);
+            // CORRECTION: Vérifier que la grille existe avant de dessiner
+            if (aiData->grid != NULL)
+            {
+                DrawGrid(window, aiData->grid);
+                DrawBot(window, aiData->bot);
+            }
             break;
         }
 
