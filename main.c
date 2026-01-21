@@ -44,7 +44,6 @@ int main(void)
         maps[i] = CreateMap("Empty", MAP_NULL);
     }
 
-    // Define actual maps
     maps[0] = CreateMap("The Line", MAP_01);
     maps[1] = CreateMap("OBSTACLES !", MAP_02);
     maps[2] = CreateMap("The S", MAP_03);
@@ -67,7 +66,6 @@ int main(void)
                 sfRenderWindow_close(window);
             }
 
-            // Handle input based on current scene
             switch (scene) {
             case MAP_SELECTION:
                 if (event.type == sfEvtKeyPressed)
@@ -87,29 +85,24 @@ int main(void)
                         ChangeMap(mapSelectionMenu, &maps[currentMap]);
                         break;
                     case sfKeyEnter:
-                        // CORRECTION CRITIQUE: S'assurer que le thread est bien arrêté
                         if (threadLaunched)
                         {
                             sfThread_terminate(aiThread);
                             threadLaunched = false;
                         }
 
-                        // CORRECTION: Nettoyer l'ancienne grille avant d'en créer une nouvelle
                         if (aiData->grid != NULL)
                         {
                             DestroyGrid(aiData->grid);
-                            aiData->grid = NULL;  // ← IMPORTANT: Mettre à NULL après destruction
+                            aiData->grid = NULL;
                         }
 
-                        // Créer la nouvelle grille
                         aiData->grid = CreateGrid(maps[currentMap].data);
                         SpawnBotAtStartCell(aiData->bot, aiData->grid);
 
-                        // CORRECTION: Réinitialiser complètement l'état du bot
                         aiData->bot->MoveQueue[0].type = INVALID;
                         aiData->step = 0;
                         aiData->pathResult = NOTHING;
-                        AIMoveInProgess = false;  // Reset du flag
 
                         if (AIMode)
                         {
@@ -141,22 +134,18 @@ int main(void)
                             AIMoveInProgess = !AIMoveInProgess;
                             if (AIMoveInProgess)
                             {
-                                printf("AI movement started...\n");
                             }
                             else
                             {
-                                printf("AI movement paused.\n");
                             }
                             break;
                         case sfKeyBackspace:
-                            // CORRECTION: Ordre optimisé + destruction de la grille
                             AIMoveInProgess = false;
                             if (threadLaunched)
                             {
                                 sfThread_terminate(aiThread);
                                 threadLaunched = false;
                             }
-                            // CORRECTION: Détruire la grille quand on quitte
                             if (aiData->grid != NULL)
                             {
                                 DestroyGrid(aiData->grid);
@@ -173,26 +162,22 @@ int main(void)
                     }
                     if (AIMoveInProgess && scene == GAME)
                     {
-                        // Lancer le thread si pas encore fait
                         if (!threadLaunched)
                         {
                             sfThread_launch(aiThread);
                             threadLaunched = true;
                         }
 
-                        // Vérifier le résultat
                         switch (aiData->pathResult)
                         {
                         case NO_MOVE_LEFT:
                             printf("No movement left\n");
-                            // CORRECTION: Ordre optimisé + destruction de la grille
                             AIMoveInProgess = false;
                             if (threadLaunched)
                             {
                                 sfThread_terminate(aiThread);
                                 threadLaunched = false;
                             }
-                            // CORRECTION: Détruire la grille avant de retourner au menu
                             if (aiData->grid != NULL)
                             {
                                 DestroyGrid(aiData->grid);
@@ -205,14 +190,12 @@ int main(void)
                             break;
                         case DEAD:
                             printf("Bot is dead - Fell off the map!\n");
-                            // CORRECTION: Ordre optimisé + destruction de la grille
                             AIMoveInProgess = false;
                             if (threadLaunched)
                             {
                                 sfThread_terminate(aiThread);
                                 threadLaunched = false;
                             }
-                            // CORRECTION: Détruire la grille avant de retourner au menu
                             if (aiData->grid != NULL)
                             {
                                 DestroyGrid(aiData->grid);
@@ -227,18 +210,15 @@ int main(void)
                             printf("======================\n");
                             printf("SUCCESS! Bot reached the end!\n");
                             printf("======================\n\n");
-                            // CORRECTION CRITIQUE: Ordre optimisé + destruction de la grille
                             AIMoveInProgess = false;
                             if (threadLaunched)
                             {
                                 sfThread_terminate(aiThread);
                                 threadLaunched = false;
                             }
-                            // CORRECTION: Détruire la grille AVANT de retourner au menu
                             if (aiData->grid != NULL)
                             {
                                 DestroyGrid(aiData->grid);
-                                aiData->grid = NULL;  // ← ESSENTIEL: Mettre à NULL
                             }
                             aiData->step = 0;
                             aiData->pathResult = NOTHING;
@@ -251,7 +231,7 @@ int main(void)
                         }
                     }
                 }
-                else // Mode manuel
+                else
                 {
                     if (event.type == sfEvtKeyPressed)
                     {
@@ -259,7 +239,6 @@ int main(void)
                         switch (event.key.code)
                         {
                         case sfKeyBackspace:
-                            // CORRECTION: Détruire la grille en mode manuel aussi
                             if (aiData->grid != NULL)
                             {
                                 DestroyGrid(aiData->grid);
@@ -294,7 +273,6 @@ int main(void)
                         {
                         case DEAD:
                             printf("Unfortunately you fell off the parkour..\n");
-                            // CORRECTION: Détruire la grille en mode manuel
                             if (aiData->grid != NULL)
                             {
                                 DestroyGrid(aiData->grid);
@@ -304,7 +282,6 @@ int main(void)
                             break;
                         case REACH_END:
                             printf("Congratulations! You reached the end!\n");
-                            // CORRECTION: Détruire la grille en mode manuel
                             if (aiData->grid != NULL)
                             {
                                 DestroyGrid(aiData->grid);
@@ -327,13 +304,11 @@ int main(void)
         /* Clear the screen */
         sfRenderWindow_clear(window, sfColor_fromRGB(33, 79, 158));
 
-        // Draw everything
         switch (scene) {
         case MAP_SELECTION:
             DrawMapSelectionMenu(window, mapSelectionMenu);
             break;
         case GAME:
-            // CORRECTION: Vérifier que la grille existe avant de dessiner
             if (aiData->grid != NULL)
             {
                 DrawGrid(window, aiData->grid);
