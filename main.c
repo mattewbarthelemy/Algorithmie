@@ -31,7 +31,16 @@ int main(void)
 
     sfThread* aiThread = NULL;
     struct GameData* aiData = (struct GameData*)malloc(sizeof(struct GameData));
+    if (!aiData) {
+        printf("ERROR: Failed to allocate GameData!\n");
+        return FAILURE;
+    }
     aiData->bot = CreateBot();
+    if (!aiData->bot) {
+        printf("ERROR: Failed to create Bot!\n");
+        free(aiData);
+        return FAILURE;
+    }
     aiData->grid = NULL;
     aiData->step = 0;
     aiData->pathResult = NOTHING;
@@ -89,6 +98,7 @@ int main(void)
                         {
                             sfThread_terminate(aiThread);
                             threadLaunched = false;
+                            sfSleep(sfMilliseconds(100));
                         }
 
                         if (aiData->grid != NULL)
@@ -98,6 +108,11 @@ int main(void)
                         }
 
                         aiData->grid = CreateGrid(maps[currentMap].data);
+                        if (!aiData->grid) {
+                            printf("ERROR: Failed to create grid!\n");
+                            scene = MAP_SELECTION;
+                            break;
+                        }
                         SpawnBotAtStartCell(aiData->bot, aiData->grid);
 
                         aiData->bot->MoveQueue[0].type = INVALID;
@@ -145,6 +160,7 @@ int main(void)
                             {
                                 sfThread_terminate(aiThread);
                                 threadLaunched = false;
+                                sfSleep(sfMilliseconds(100));
                             }
                             if (aiData->grid != NULL)
                             {
@@ -177,6 +193,7 @@ int main(void)
                             {
                                 sfThread_terminate(aiThread);
                                 threadLaunched = false;
+                                sfSleep(sfMilliseconds(100));
                             }
                             if (aiData->grid != NULL)
                             {
@@ -195,6 +212,7 @@ int main(void)
                             {
                                 sfThread_terminate(aiThread);
                                 threadLaunched = false;
+                                sfSleep(sfMilliseconds(100));
                             }
                             if (aiData->grid != NULL)
                             {
@@ -215,6 +233,7 @@ int main(void)
                             {
                                 sfThread_terminate(aiThread);
                                 threadLaunched = false;
+                                sfSleep(sfMilliseconds(100));
                             }
                             if (aiData->grid != NULL)
                             {
@@ -311,6 +330,16 @@ int main(void)
         case GAME:
             if (aiData->grid != NULL)
             {
+                UpdateAnimation(aiData->bot->animation, aiData->bot->sprite);
+
+                // Auto-désactiver l'animation après 150ms sans mouvement
+                if (aiData->bot->animation && aiData->bot->animation->isPlaying && aiData->bot->animation->clock) {
+                    sfTime elapsed = sfClock_getElapsedTime(aiData->bot->animation->clock);
+                    if (sfTime_asSeconds(elapsed) > 0.6f && !AIMoveInProgess) {
+                        StopAnimation(aiData->bot->animation, aiData->bot->sprite);
+                    }
+                }
+
                 DrawGrid(window, aiData->grid);
                 DrawBot(window, aiData->bot);
             }

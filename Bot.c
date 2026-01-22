@@ -1,4 +1,5 @@
 ﻿#include "Bot.h"
+#include "AnimationBot.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -10,13 +11,38 @@
 struct Bot* CreateBot()
 {
     struct Bot* bot = (struct Bot*)malloc(sizeof(struct Bot));
+    if (!bot) {
+        printf("ERROR: Failed to allocate Bot!\n");
+        return NULL;
+    }
     memset(bot, 0, sizeof(struct Bot));
 
     bot->position = (sfVector2i){ 0, 0 };
-
     bot->sprite = sfSprite_create();
-    sfTexture* tex = sfTexture_createFromFile("./Assets/Characters/Bot01.png", NULL);
-    sfSprite_setTexture(bot->sprite, tex, sfTrue);
+    if (!bot->sprite) {
+        printf("ERROR: Failed to create sprite!\n");
+        free(bot);
+        return NULL;
+    }
+
+    // Créer l'animation (module séparé)
+    bot->animation = CreateBotAnimation(0.5f);
+    if (!bot->animation) {
+        printf("ERROR: Failed to create animation!\n");
+        sfSprite_destroy(bot->sprite);
+        free(bot);
+        return NULL;
+    }
+
+    // Charger les frames
+    if (!LoadAnimationFrames(bot->animation)) {
+        printf("WARNING: Some animation frames failed to load!\n");
+    }
+
+    // Appliquer la frame initiale
+    if (bot->animation->frames[0]) {
+        sfSprite_setTexture(bot->sprite, bot->animation->frames[0], sfTrue);
+    }
 
     float scale = ((float)CELL_SIZE / 24.f) * 0.75f;
     sfSprite_setScale(bot->sprite, (sfVector2f) { scale, scale });
@@ -44,10 +70,20 @@ void SpawnBotAtStartCell(struct Bot* bot, Grid* grid)
     }
 }
 
+
+
 void DestroyBot(struct Bot* bot)
 {
     if (!bot) return;
-    if (bot->sprite) sfSprite_destroy(bot->sprite);
+
+    if (bot->animation) {
+        DestroyBotAnimation(bot->animation);
+    }
+
+    if (bot->sprite) {
+        sfSprite_destroy(bot->sprite);
+    }
+
     free(bot);
 }
 
@@ -59,6 +95,11 @@ void DrawBot(sfRenderWindow* window, struct Bot* bot)
 
 int MoveBot(struct Bot* bot, Grid* grid, enum MovementType type, enum Direction direction)
 {
+    if (!bot || !grid) return DEAD;
+
+    // Activer l'animation
+    StartAnimation(bot->animation);
+
     int distance = (type == JUMP) ? 2 : 1;
     sfVector2i newPosition = bot->position;
 
@@ -133,6 +174,7 @@ void MoveBot_AI(struct GameData* data)
 
     while (data->bot->MoveQueue[data->step].type != INVALID)
     {
+        UpdateAnimation(data->bot->animation, data->bot->sprite);
         sfSleep(sfMilliseconds(50));
 
         enum MovementType type = data->bot->MoveQueue[data->step].type;

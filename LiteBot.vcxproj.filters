@@ -24,6 +24,18 @@
     <ClInclude Include="grid.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Bot.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="map.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MapSelectionMenu.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AnimationBot.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="cell.c">
@@ -33,6 +45,18 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="main.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Bot.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="map.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MapSelectionMenu.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AnimationBot.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -22,39 +22,43 @@ void LoadAllMapSelectionMenuTextures()
 MapSelectionMenu* CreateMapSelectionMenu()
 {
     LoadAllMapSelectionMenuTextures();
-    
+
     MapSelectionMenu* mapSelectionMenu = (struct MapSelectionMenu*)malloc(sizeof(struct MapSelectionMenu));
-    
+    if (!mapSelectionMenu) {
+        printf("ERROR: Failed to allocate MapSelectionMenu!\n");
+        return NULL;
+    }
+
     mapSelectionMenu->currentMapText = sfText_create();
     sfText_setFont(mapSelectionMenu->currentMapText, GAME_FONT);
     sfText_setCharacterSize(mapSelectionMenu->currentMapText, 50);
     sfText_setColor(mapSelectionMenu->currentMapText, sfWhite);
     sfText_setString(mapSelectionMenu->currentMapText, "Map 01");
-    sfText_setOrigin(mapSelectionMenu->currentMapText, (sfVector2f){60.f, 30.f});
-    sfText_setPosition(mapSelectionMenu->currentMapText, (sfVector2f){(WINDOW_WIDTH/2)-90, (WINDOW_HEIGHT/2)-5});
-    
+    sfText_setOrigin(mapSelectionMenu->currentMapText, (sfVector2f) { 60.f, 30.f });
+    sfText_setPosition(mapSelectionMenu->currentMapText, (sfVector2f) { (WINDOW_WIDTH / 2) - 90, (WINDOW_HEIGHT / 2) - 5 });
+
     mapSelectionMenu->rightArrowSprite = sfSprite_create();
     mapSelectionMenu->leftArrowSprite = sfSprite_create();
     sfSprite_setTexture(mapSelectionMenu->leftArrowSprite, ARROW_TEXTURE, sfTrue);
     sfSprite_setRotation(mapSelectionMenu->leftArrowSprite, 180);
     sfSprite_setTexture(mapSelectionMenu->rightArrowSprite, ARROW_TEXTURE, sfTrue);
-    sfSprite_setOrigin(mapSelectionMenu->leftArrowSprite, (sfVector2f){32.f,  32.f});
-    sfSprite_setOrigin(mapSelectionMenu->rightArrowSprite, (sfVector2f){32.f, 32.f});
-    sfSprite_setPosition(mapSelectionMenu->rightArrowSprite, (sfVector2f){WINDOW_WIDTH - (WINDOW_WIDTH/4), WINDOW_HEIGHT/2});
-    sfSprite_setPosition(mapSelectionMenu->leftArrowSprite, (sfVector2f){WINDOW_WIDTH/4, WINDOW_HEIGHT/2});
-    
+    sfSprite_setOrigin(mapSelectionMenu->leftArrowSprite, (sfVector2f) { 32.f, 32.f });
+    sfSprite_setOrigin(mapSelectionMenu->rightArrowSprite, (sfVector2f) { 32.f, 32.f });
+    sfSprite_setPosition(mapSelectionMenu->rightArrowSprite, (sfVector2f) { WINDOW_WIDTH - (WINDOW_WIDTH / 4), WINDOW_HEIGHT / 2 });
+    sfSprite_setPosition(mapSelectionMenu->leftArrowSprite, (sfVector2f) { WINDOW_WIDTH / 4, WINDOW_HEIGHT / 2 });
+
     mapSelectionMenu->modeIconSprite = sfSprite_create();
     sfSprite_setTexture(mapSelectionMenu->modeIconSprite, MANUAL_MODE_TEXTURE, sfTrue);
-    sfSprite_setPosition(mapSelectionMenu->modeIconSprite, (sfVector2f){20, 20});
-    
+    sfSprite_setPosition(mapSelectionMenu->modeIconSprite, (sfVector2f) { 20, 20 });
+
     mapSelectionMenu->modeText = sfText_create();
     sfText_setFont(mapSelectionMenu->modeText, GAME_FONT);
     sfText_setCharacterSize(mapSelectionMenu->modeText, 30);
     sfText_setColor(mapSelectionMenu->modeText, sfWhite);
     sfText_setString(mapSelectionMenu->modeText, "Manual Mode");
-    sfText_setPosition(mapSelectionMenu->modeText, (sfVector2f){20 + 64 + 5, 20 + 16});
-    
-    
+    sfText_setPosition(mapSelectionMenu->modeText, (sfVector2f) { 20 + 64 + 5, 20 + 16 });
+
+
     return mapSelectionMenu;
 }
 
@@ -64,7 +68,8 @@ void ChangeMode(MapSelectionMenu* mapSelectionMenu, bool aiMode)
     {
         sfSprite_setTexture(mapSelectionMenu->modeIconSprite, AI_MODE_TEXTURE, sfTrue);
         sfText_setString(mapSelectionMenu->modeText, "AI Mode");
-    } else
+    }
+    else
     {
         sfSprite_setTexture(mapSelectionMenu->modeIconSprite, MANUAL_MODE_TEXTURE, sfTrue);
         sfText_setString(mapSelectionMenu->modeText, "Manual Mode");
@@ -74,7 +79,7 @@ void ChangeMode(MapSelectionMenu* mapSelectionMenu, bool aiMode)
 void ChangeMap(MapSelectionMenu* mapSelectionMenu, Map* map)
 {
     if (!mapSelectionMenu) return;
-    
+
     sfText_setString(mapSelectionMenu->currentMapText, map->name);
 }
 
@@ -107,4 +112,3 @@ void DrawMapSelectionMenu(sfRenderWindow* window, MapSelectionMenu* menu)
     if (menu->modeText)
         sfRenderWindow_drawText(window, menu->modeText, NULL);
 }
-
