@@ -180,7 +180,7 @@ void MoveBot_AI(struct GameData* data)
     while (data->bot->MoveQueue[data->step].type != INVALID)
     {
         UpdateAnimation(data->bot->animation, data->bot->sprite);
-        sfSleep(sfMilliseconds(50));
+        sfSleep(sfMilliseconds(150));
 
         enum MovementType type = data->bot->MoveQueue[data->step].type;
         enum Direction direction = data->bot->MoveQueue[data->step].direction;
