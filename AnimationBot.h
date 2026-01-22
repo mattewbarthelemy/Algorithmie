@@ -4,7 +4,7 @@
 #include <SFML/System.h>
 #include <stdbool.h>
 
-#define ANIMATION_FRAMES 3  // 3 images par direction
+#define ANIMATION_FRAMES 5  // 3 images par direction
 
 // Direction de l'animation
 typedef enum {

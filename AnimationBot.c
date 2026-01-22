@@ -41,11 +41,15 @@ bool LoadAnimationFrames(BotAnimation* anim)
     anim->framesLeft[0] = sfTexture_createFromFile("./Assets/Characters/Move_Left/Bot_L0.png", NULL);
     anim->framesLeft[1] = sfTexture_createFromFile("./Assets/Characters/Move_Left/Bot_L1.png", NULL);
     anim->framesLeft[2] = sfTexture_createFromFile("./Assets/Characters/Move_Left/Bot_L2.png", NULL);
+    anim->framesLeft[3] = sfTexture_createFromFile("./Assets/Characters/Move_Left/Bot_L3.png", NULL);
+    anim->framesLeft[4] = sfTexture_createFromFile("./Assets/Characters/Move_Left/Bot_L4.png", NULL);
 
     // Charger les frames DROITE (Move_Right)
-    anim->framesRight[0] = sfTexture_createFromFile("./Assets/Characters/Move_Right/Bot-R0.png", NULL);
-    anim->framesRight[1] = sfTexture_createFromFile("./Assets/Characters/Move_Right/Bot_R01.png", NULL);
-    anim->framesRight[2] = sfTexture_createFromFile("./Assets/Characters/Move_Right/Bot_R02.png", NULL);
+    anim->framesRight[0] = sfTexture_createFromFile("./Assets/Characters/Move_Right/Bot_R0.png", NULL);
+    anim->framesRight[1] = sfTexture_createFromFile("./Assets/Characters/Move_Right/Bot_R1.png", NULL);
+    anim->framesRight[2] = sfTexture_createFromFile("./Assets/Characters/Move_Right/Bot_R2.png", NULL);
+    anim->framesRight[3] = sfTexture_createFromFile("./Assets/Characters/Move_Right/Bot_R3.png", NULL);
+    anim->framesRight[4] = sfTexture_createFromFile("./Assets/Characters/Move_Right/Bot_R4.png", NULL);
 
     // Vérifier le chargement
     bool leftOk = true, rightOk = true;

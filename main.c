@@ -60,6 +60,10 @@ int main(void)
     maps[6] = CreateMap("Hello ?", MAP_07);
     maps[7] = CreateMap("Why ?", MAP_08);
     maps[8] = CreateMap("The Chaos", MAP_09);
+    maps[9] = CreateMap("Test 1", MAP_10);
+    maps[10] = CreateMap("test 2", MAP_11);
+    maps[11] = CreateMap("test 3", MAP_12);
+    maps[12] = CreateMap("test 4", MAP_13);
 
     ChangeMap(mapSelectionMenu, &maps[currentMap]);
 
@@ -317,7 +321,6 @@ int main(void)
             }
         }
 
-        /* Clear the screen */
         sfRenderWindow_clear(window, sfColor_fromRGB(33, 79, 158));
 
         switch (scene) {
