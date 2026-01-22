@@ -53,6 +53,7 @@ int main(void)
     maps[5] = CreateMap("06", MAP_06);
     maps[6] = CreateMap("07", MAP_07);
     maps[7] = CreateMap("08", MAP_08);
+    maps[8] = CreateMap("09", MAP_09);
     // Add more maps as needed here
     
     ChangeMap(mapSelectionMenu, &maps[currentMap]);
