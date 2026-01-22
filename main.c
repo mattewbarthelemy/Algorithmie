@@ -13,8 +13,6 @@ int main(void)
     sfVideoMode mode = { WINDOW_WIDTH, WINDOW_HEIGHT, 32 };
     sfRenderWindow* window;
     sfEvent event;
-
-    /* Create the main window */
     window = sfRenderWindow_create(mode, WINDOW_TITLE, sfClose, NULL);
     if (!window)
     {
@@ -63,13 +61,10 @@ int main(void)
 
     ChangeMap(mapSelectionMenu, &maps[currentMap]);
 
-    /* Start the game loop */
     while (sfRenderWindow_isOpen(window))
     {
-        /* Process events */
         while (sfRenderWindow_pollEvent(window, &event))
         {
-            /* Close window : exit */
             if (event.type == sfEvtClosed)
             {
                 sfRenderWindow_close(window);
@@ -283,7 +278,7 @@ int main(void)
                             break;
                         case sfKeySpace:
                             movementType = JUMP;
-                            printf("Next move will be a JUMP!\n");
+                            printf("JUMP Ready!\n");
                             break;
                         default:
                             break;
@@ -332,7 +327,6 @@ int main(void)
             {
                 UpdateAnimation(aiData->bot->animation, aiData->bot->sprite);
 
-                // Auto-désactiver l'animation après 150ms sans mouvement
                 if (aiData->bot->animation && aiData->bot->animation->isPlaying && aiData->bot->animation->clock) {
                     sfTime elapsed = sfClock_getElapsedTime(aiData->bot->animation->clock);
                     if (sfTime_asSeconds(elapsed) > 0.6f && !AIMoveInProgess) {
@@ -346,11 +340,9 @@ int main(void)
             break;
         }
 
-        /* Update the window */
         sfRenderWindow_display(window);
     }
 
-    /* Cleanup resources */
     if (threadLaunched)
     {
         sfThread_terminate(aiThread);

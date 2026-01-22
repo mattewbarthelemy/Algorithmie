@@ -25,7 +25,6 @@ struct Bot* CreateBot()
         return NULL;
     }
 
-    // Créer l'animation (module séparé)
     bot->animation = CreateBotAnimation(0.5f);
     if (!bot->animation) {
         printf("ERROR: Failed to create animation!\n");
@@ -34,14 +33,12 @@ struct Bot* CreateBot()
         return NULL;
     }
 
-    // Charger les frames
     if (!LoadAnimationFrames(bot->animation)) {
         printf("WARNING: Some animation frames failed to load!\n");
     }
 
-    // Appliquer la frame initiale
-    if (bot->animation->frames[0]) {
-        sfSprite_setTexture(bot->sprite, bot->animation->frames[0], sfTrue);
+    if (bot->animation->framesRight[0]) {
+        sfSprite_setTexture(bot->sprite, bot->animation->framesRight[0], sfTrue);
     }
 
     float scale = ((float)CELL_SIZE / 24.f) * 0.75f;
@@ -97,8 +94,16 @@ int MoveBot(struct Bot* bot, Grid* grid, enum MovementType type, enum Direction 
 {
     if (!bot || !grid) return DEAD;
 
-    // Activer l'animation
-    StartAnimation(bot->animation);
+    // Changer la direction de l'animation selon le mouvement
+    if (direction == WEST) {
+        SetAnimationDirection(bot->animation, ANIM_LEFT, bot->sprite);
+    }
+    else if (direction == EAST) {
+        SetAnimationDirection(bot->animation, ANIM_RIGHT, bot->sprite);
+    }
+    // Pour NORTH et SOUTH, garder la direction actuelle
+
+    // L'animation est dÃ©jÃ  active (pas besoin de StartAnimation)
 
     int distance = (type == JUMP) ? 2 : 1;
     sfVector2i newPosition = bot->position;

@@ -86,8 +86,6 @@ void DrawCell(sfRenderWindow* window, Cell* cell) {
 }
 
 void GetRequiredSpriteForCell(Cell* cell, int grid[20][20]) {
-    // This function would determine the correct sprite for the cell based on its type and possibly its neighbors
-    // For simplicity, this function is left unimplemented
     sfTexture* texture = NULL;
 
     int neighbours = 0;
@@ -122,11 +120,9 @@ void GetRequiredSpriteForCell(Cell* cell, int grid[20][20]) {
     switch (cell->type)
     {
     case EMPTY:
-        // Load or assign sprite for EMPTY
         texture = EMPTY_CELL_TEXTURE;
         break;
     case WALKABLE:
-        // Load or assign sprite for WALKABLE
         switch (neighbours)
         {
         case NONE:
@@ -174,15 +170,12 @@ void GetRequiredSpriteForCell(Cell* cell, int grid[20][20]) {
         }
         break;
     case START:
-        // Load or assign sprite for START
         texture = START_CELL_TEXTURE;
         break;
     case END:
-        // Load or assign sprite for END
         texture = END_CELL_TEXTURE;
         break;
     case OBSTACLE:
-        // Load or assign sprite for OBSTACLE
         switch (neighbours)
         {
         case NONE:

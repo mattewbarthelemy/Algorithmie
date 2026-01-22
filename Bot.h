@@ -23,7 +23,6 @@ struct Bot
     sfSprite* sprite;
     struct Move MoveQueue[MAX_MOVES];
 
-    // Animation (module séparé)
     BotAnimation* animation;
 };
 
