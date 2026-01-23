@@ -101,9 +101,6 @@ int MoveBot(struct Bot* bot, Grid* grid, enum MovementType type, enum Direction 
     else if (direction == EAST) {
         SetAnimationDirection(bot->animation, ANIM_RIGHT, bot->sprite);
     }
-    // Pour NORTH et SOUTH, garder la direction actuelle
-
-    // L'animation est dÃ©jÃ  active (pas besoin de StartAnimation)
 
     int distance = (type == JUMP) ? 2 : 1;
     sfVector2i newPosition = bot->position;

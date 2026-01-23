@@ -7,8 +7,8 @@
 #include <SFML/Graphics/Types.h>
 
 #define WINDOW_TITLE "LiteBot"
-#define WINDOW_WIDTH 800    // CELL_SIZE * GRID_COLS
-#define WINDOW_HEIGHT 800   // CELL_SIZE * GRID_ROWS
+#define WINDOW_WIDTH 800
+#define WINDOW_HEIGHT 800
 
 #define GRID_ROWS 20
 #define GRID_COLS 20
