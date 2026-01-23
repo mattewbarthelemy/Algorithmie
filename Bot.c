@@ -94,7 +94,6 @@ int MoveBot(struct Bot* bot, Grid* grid, enum MovementType type, enum Direction 
 {
     if (!bot || !grid) return DEAD;
 
-    // Changer la direction de l'animation selon le mouvement
     if (direction == WEST) {
         SetAnimationDirection(bot->animation, ANIM_LEFT, bot->sprite);
     }

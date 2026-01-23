@@ -31,7 +31,7 @@ int main(void)
     if (timerFont) sfText_setFont(timerText, timerFont);
     sfText_setCharacterSize(timerText, 30);
     sfText_setFillColor(timerText, sfWhite);
-    sfText_setString(timerText, "00:00.00");
+    sfText_setString(timerText, "00 : 00 . 00");
 
     MapSelectionMenu* mapSelectionMenu = CreateMapSelectionMenu();
 
@@ -181,7 +181,6 @@ int main(void)
                         case sfKeyBackspace:
                             AIMoveInProgess = false;
 
-                            // Arrêter le timer
                             if (aiData->timerRunning) {
                                 aiData->elapsedTime = sfTime_asSeconds(sfClock_getElapsedTime(aiData->timer));
                                 aiData->timerRunning = false;
@@ -216,7 +215,6 @@ int main(void)
                         switch (event.key.code)
                         {
                         case sfKeyBackspace:
-                            // Arrêter le timer
                             if (aiData->timerRunning) {
                                 aiData->elapsedTime = sfTime_asSeconds(sfClock_getElapsedTime(aiData->timer));
                                 aiData->timerRunning = false;
@@ -257,7 +255,6 @@ int main(void)
                         case DEAD:
                             printf("Unfortunately you fell off the parkour..\n");
 
-                            // Arrêter le timer
                             if (aiData->timerRunning) {
                                 aiData->elapsedTime = sfTime_asSeconds(sfClock_getElapsedTime(aiData->timer));
                                 aiData->timerRunning = false;
@@ -273,7 +270,6 @@ int main(void)
                         case REACH_END:
                             printf("Congratulations! You reached the end!\n");
 
-                            // Arrêter le timer
                             if (aiData->timerRunning) {
                                 aiData->elapsedTime = sfTime_asSeconds(sfClock_getElapsedTime(aiData->timer));
                                 aiData->timerRunning = false;
@@ -313,7 +309,6 @@ int main(void)
                 printf("SUCCESS! Bot reached the end!\n");
                 printf("======================\n\n");
 
-                // Arrêter le timer
                 if (aiData->timerRunning) {
                     aiData->elapsedTime = sfTime_asSeconds(sfClock_getElapsedTime(aiData->timer));
                     aiData->timerRunning = false;
@@ -357,7 +352,6 @@ int main(void)
             case DEAD:
                 printf("Bot is dead - Fell off the map!\n");
 
-                // Arrêter le timer
                 if (aiData->timerRunning) {
                     aiData->elapsedTime = sfTime_asSeconds(sfClock_getElapsedTime(aiData->timer));
                     aiData->timerRunning = false;
@@ -412,7 +406,6 @@ int main(void)
             break;
         }
 
-        // Afficher le timer (dans toutes les scènes)
         float displayTime;
         if (aiData->timerRunning) {
             displayTime = sfTime_asSeconds(sfClock_getElapsedTime(aiData->timer));
@@ -426,7 +419,7 @@ int main(void)
         int centiseconds = (int)((displayTime - (int)displayTime) * 100);
 
         char timerString[32];
-        sprintf_s(timerString, sizeof(timerString), "%02d:%02d.%02d", minutes, seconds, centiseconds);
+        sprintf_s(timerString, sizeof(timerString), "%02d : %02d . %02d", minutes, seconds, centiseconds);
         sfText_setString(timerText, timerString);
 
         sfFloatRect textBounds = sfText_getLocalBounds(timerText);
