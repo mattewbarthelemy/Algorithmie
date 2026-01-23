@@ -23,7 +23,7 @@ int main(void)
         return NULL_WINDOW;
     }
 
-    sfFont* timerFont = sfFont_createFromFile("./Assets/Geo-Regular.ttf");
+    sfFont* timerFont = sfFont_createFromFile("./Assets/Andelion Script.ttf");
     if (!timerFont) {
         printf("WARNING: Failed to load timer font\n");
     }
