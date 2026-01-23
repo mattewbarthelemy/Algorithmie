@@ -1,5 +1,4 @@
 #include "Cell.h"
-
 #include <SFML/Graphics.h>
 #include <SFML/Graphics/Texture.h>
 
@@ -23,29 +22,57 @@ static sfTexture* END_CELL_TEXTURE = NULL;
 static sfTexture* OBSTACLE_NORTH_SOUTH_CELL_TEXTURE = NULL;
 static sfTexture* OBSTACLE_EAST_WEST_CELL_TEXTURE = NULL;
 static sfTexture* OBSTACLE_CROSSROAD_CELL_TEXTURE = NULL;
+static sfTexture* DECORATION_TEXTURE = NULL;
 
-void LoadAllCellTextures() {
-    EMPTY_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Custom Style/Empty.png", NULL);
-    EMPTY_NORTH_SOUTH_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Custom Style/Empty_North_South.png", NULL);
-    EMPTY_EAST_WEST_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Custom Style/Empty_East_West.png", NULL);
-    WALKABLE_NORTH_SOUTH_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Custom Style/Walkable_North_South.png", NULL);
-    WALKABLE_EAST_WEST_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Custom Style/Walkable_East_West.png", NULL);
-    WALKABLE_NORTH_EAST_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Custom Style/Walkable_North_East.png", NULL);
-    WALKABLE_NORTH_WEST_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Custom Style/Walkable_North_West.png", NULL);
-    WALKABLE_SOUTH_EAST_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Custom Style/Walkable_South_East.png", NULL);
-    WALKABLE_SOUTH_WEST_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Custom Style/Walkable_South_West.png", NULL);
-    WALKABLE_T_JUNCTION_NORTH_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Custom Style/Walkable_T_Junction_North.png", NULL);
-    WALKABLE_T_JUNCTION_SOUTH_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Custom Style/Walkable_T_Junction_South.png", NULL);
-    WALKABLE_T_JUNCTION_EAST_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Custom Style/Walkable_T_Junction_East.png", NULL);
-    WALKABLE_T_JUNCTION_WEST_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Custom Style/Walkable_T_Junction_West.png", NULL);
-    WALKABLE_CROSSROAD_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Custom Style/Walkable_Crossroad.png", NULL);
-    WALKABLE_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Custom Style/Walkable.png", NULL);
-    START_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Custom Style/Start.png", NULL);
-    END_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Custom Style/End.png", NULL);
-    OBSTACLE_NORTH_SOUTH_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Custom Style/Obstacle_North_South.png", NULL);
-    OBSTACLE_EAST_WEST_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Custom Style/Obstacle_East_West.png", NULL);
-    OBSTACLE_CROSSROAD_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Custom Style/Obstacle_Crossroad.png", NULL);
-
+void LoadAllCellTextures(bool CustomTexture) {
+    if (CustomTexture)
+    {
+        EMPTY_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Custom Style/Empty.png", NULL);
+        EMPTY_NORTH_SOUTH_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Custom Style/Empty_North_South.png", NULL);
+        EMPTY_EAST_WEST_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Custom Style/Empty_East_West.png", NULL);
+        WALKABLE_NORTH_SOUTH_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Custom Style/Walkable_North_South.png", NULL);
+        WALKABLE_EAST_WEST_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Custom Style/Walkable_East_West.png", NULL);
+        WALKABLE_NORTH_EAST_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Custom Style/Walkable_North_East.png", NULL);
+        WALKABLE_NORTH_WEST_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Custom Style/Walkable_North_West.png", NULL);
+        WALKABLE_SOUTH_EAST_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Custom Style/Walkable_South_East.png", NULL);
+        WALKABLE_SOUTH_WEST_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Custom Style/Walkable_South_West.png", NULL);
+        WALKABLE_T_JUNCTION_NORTH_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Custom Style/Walkable_T_Junction_North.png", NULL);
+        WALKABLE_T_JUNCTION_SOUTH_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Custom Style/Walkable_T_Junction_South.png", NULL);
+        WALKABLE_T_JUNCTION_EAST_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Custom Style/Walkable_T_Junction_East.png", NULL);
+        WALKABLE_T_JUNCTION_WEST_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Custom Style/Walkable_T_Junction_West.png", NULL);
+        WALKABLE_CROSSROAD_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Custom Style/Walkable_Crossroad.png", NULL);
+        WALKABLE_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Custom Style/Walkable.png", NULL);
+        START_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Custom Style/Start.png", NULL);
+        END_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Custom Style/End.png", NULL);
+        OBSTACLE_NORTH_SOUTH_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Custom Style/Obstacle_North_South.png", NULL);
+        OBSTACLE_EAST_WEST_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Custom Style/Obstacle_East_West.png", NULL);
+        OBSTACLE_CROSSROAD_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Custom Style/Obstacle_Crossroad.png", NULL);
+        DECORATION_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Custom Style/Tree.png", NULL);
+    }
+    else
+    {
+        EMPTY_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Style A/Empty.png", NULL);
+        EMPTY_NORTH_SOUTH_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Style A/Empty_North_South.png", NULL);
+        EMPTY_EAST_WEST_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Style A/Empty_East_West.png", NULL);
+        WALKABLE_NORTH_SOUTH_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Style A/Walkable_North_South.png", NULL);
+        WALKABLE_EAST_WEST_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Style A/Walkable_East_West.png", NULL);
+        WALKABLE_NORTH_EAST_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Style A/Walkable_North_East.png", NULL);
+        WALKABLE_NORTH_WEST_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Style A/Walkable_North_West.png", NULL);
+        WALKABLE_SOUTH_EAST_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Style A/Walkable_South_East.png", NULL);
+        WALKABLE_SOUTH_WEST_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Style A/Walkable_South_West.png", NULL);
+        WALKABLE_T_JUNCTION_NORTH_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Style A/Walkable_T_Junction_North.png", NULL);
+        WALKABLE_T_JUNCTION_SOUTH_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Style A/Walkable_T_Junction_South.png", NULL);
+        WALKABLE_T_JUNCTION_EAST_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Style A/Walkable_T_Junction_East.png", NULL);
+        WALKABLE_T_JUNCTION_WEST_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Style A/Walkable_T_Junction_West.png", NULL);
+        WALKABLE_CROSSROAD_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Style A/Walkable_Crossroad.png", NULL);
+        WALKABLE_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Style A/Walkable.png", NULL);
+        START_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Style A/Start.png", NULL);
+        END_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Style A/End.png", NULL);
+        OBSTACLE_NORTH_SOUTH_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Style A/Obstacle_North_South.png", NULL);
+        OBSTACLE_EAST_WEST_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Style A/Obstacle_East_West.png", NULL);
+        OBSTACLE_CROSSROAD_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Style A/Obstacle_Crossroad.png", NULL);
+        DECORATION_TEXTURE = NULL;
+    }
     printf("Texture Loaded !\n");
 }
 
@@ -69,6 +96,24 @@ Cell* CreateCell(sfVector2i cellCoord, float size, enum CellType type, int grid[
     float scale = (float)CELL_SIZE / 8.f;
     sfSprite_setScale(cell->sprite, (sfVector2f) { scale, scale });
 
+    cell->decorationSprite = NULL;
+    cell->hasDecoration = false;
+
+    if (type == EMPTY && DECORATION_TEXTURE != NULL)
+    {
+        int random = rand() % 80;
+        if (random < 4)
+        {
+            cell->hasDecoration = true;
+            cell->decorationSprite = sfSprite_create();
+            if (cell->decorationSprite) {
+                sfSprite_setTexture(cell->decorationSprite, DECORATION_TEXTURE, sfTrue);
+                sfSprite_setPosition(cell->decorationSprite, (sfVector2f) { (float)cellCoord.x* size, (float)cellCoord.y* size });
+                sfSprite_setScale(cell->decorationSprite, (sfVector2f) { scale, scale });
+            }
+        }
+    }
+
     return cell;
 }
 
@@ -77,6 +122,10 @@ void DestroyCell(Cell* cell) {
         if (cell->sprite) {
             sfSprite_destroy(cell->sprite);
         }
+        if (cell->decorationSprite) {
+            sfSprite_destroy(cell->decorationSprite);
+            cell->decorationSprite = NULL;
+        }
         free(cell);
     }
 }
@@ -84,6 +133,13 @@ void DestroyCell(Cell* cell) {
 void DrawCell(sfRenderWindow* window, Cell* cell) {
     if (window && cell && cell->sprite) {
         sfRenderWindow_drawSprite(window, cell->sprite, NULL);
+
+        if (cell->hasDecoration && cell->decorationSprite) {
+            sfRenderWindow_drawSprite(window, cell->decorationSprite, NULL);
+        }
+        if (cell->hasDecoration && cell->decorationSprite) {
+            sfRenderWindow_drawSprite(window, cell->decorationSprite, NULL);
+        }
     }
 }
 

@@ -10,6 +10,8 @@ typedef struct MapSelectionMenu
     sfSprite* rightArrowSprite;
     sfSprite* modeIconSprite;
     sfText* modeText;
+    sfSprite* TextureIconSprite;
+    sfText* TextureSelect;
 } MapSelectionMenu;
 
 void LoadAllMapSelectionMenuTextures();
@@ -17,6 +19,8 @@ void LoadAllMapSelectionMenuTextures();
 MapSelectionMenu* CreateMapSelectionMenu();
 
 void ChangeMode(MapSelectionMenu* mapSelectionMenu, bool aiMode);
+
+void ChangeTexture(MapSelectionMenu* mapSelectionMenu, bool customtexture);
 
 void ChangeMap(MapSelectionMenu* mapSelectionMenu, Map* map);
 

@@ -8,9 +8,11 @@ typedef struct Cell {
     sfVector2i coord;
     enum CellType type;
     sfSprite *sprite;
+    sfSprite* decorationSprite;
+    bool hasDecoration;
 } Cell;
 
-void LoadAllCellTextures();
+void LoadAllCellTextures(bool CustomTexture);
 
 Cell* CreateCell(sfVector2i cellCoord, float size, enum CellType type, int grid[20][20]);
 

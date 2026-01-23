@@ -175,12 +175,24 @@ void AddMovement(struct Bot* bot, enum MovementType type, enum Direction directi
 
 void MoveBot_AI(struct GameData* data)
 {
+    extern volatile bool stopAIThread;
+
     if (!data || !data->bot || !data->grid) return;
 
     while (data->bot->MoveQueue[data->step].type != INVALID)
     {
+        if (stopAIThread) {
+            stopAIThread = false;
+            return;
+        }
+
         UpdateAnimation(data->bot->animation, data->bot->sprite);
         sfSleep(sfMilliseconds(150));
+
+        if (stopAIThread) {
+            stopAIThread = false;
+            return;
+        }
 
         enum MovementType type = data->bot->MoveQueue[data->step].type;
         enum Direction direction = data->bot->MoveQueue[data->step].direction;

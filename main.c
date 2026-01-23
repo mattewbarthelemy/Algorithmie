@@ -1,5 +1,6 @@
 ﻿#include <SFML/Audio.h>
 #include <SFML/Graphics.h>
+#include <time.h>
 
 #include "basics.h"
 #include "Bot.h"
@@ -7,9 +8,12 @@
 #include "map.h"
 #include "MapSelectionMenu.h"
 
+volatile bool stopAIThread = false;
 
 int main(void)
 {
+    srand(time(NULL));
+
     sfVideoMode mode = { WINDOW_WIDTH, WINDOW_HEIGHT, 32 };
     sfRenderWindow* window;
     sfEvent event;
@@ -26,6 +30,7 @@ int main(void)
     enum MovementType movementType = MOVE_TO;
     bool AIMode = false;
     bool AIMoveInProgess = false;
+    bool CustomTexture = false;
 
     sfThread* aiThread = NULL;
     struct GameData* aiData = (struct GameData*)malloc(sizeof(struct GameData));
@@ -57,13 +62,14 @@ int main(void)
     maps[3] = CreateMap("Make a Choice", MAP_04);
     maps[4] = CreateMap("The Maze", MAP_05);
     maps[5] = CreateMap("Easy", MAP_06);
-    maps[6] = CreateMap("Hello ?", MAP_07);
-    maps[7] = CreateMap("Why ?", MAP_08);
+    maps[6] = CreateMap("The Snake", MAP_07);
+    maps[7] = CreateMap("Lost", MAP_08);
     maps[8] = CreateMap("The Chaos", MAP_09);
-    maps[9] = CreateMap("Test 1", MAP_10);
-    maps[10] = CreateMap("test 2", MAP_11);
-    maps[11] = CreateMap("test 3", MAP_12);
-    maps[12] = CreateMap("test 4", MAP_13);
+    maps[9] = CreateMap("The Maze 2", MAP_10);
+    maps[10] = CreateMap("The Dungeon", MAP_11);
+    maps[11] = CreateMap("The Slime", MAP_12);
+    maps[12] = CreateMap("Interstellar", MAP_13);
+    maps[13] = CreateMap("Crazy World", MAP_14);
 
     ChangeMap(mapSelectionMenu, &maps[currentMap]);
 
@@ -108,7 +114,7 @@ int main(void)
                             aiData->grid = NULL;
                         }
 
-                        aiData->grid = CreateGrid(maps[currentMap].data);
+                        aiData->grid = CreateGrid(maps[currentMap].data, CustomTexture);
                         if (!aiData->grid) {
                             printf("ERROR: Failed to create grid!\n");
                             scene = MAP_SELECTION;
@@ -119,6 +125,7 @@ int main(void)
                         aiData->bot->MoveQueue[0].type = INVALID;
                         aiData->step = 0;
                         aiData->pathResult = NOTHING;
+                        stopAIThread = false;
 
                         if (AIMode)
                         {
@@ -126,6 +133,10 @@ int main(void)
                             if (!found)
                             {
                                 printf("No path found by AI\n");
+                            }
+                            if (found)
+                            {
+                                AIMoveInProgess = true;
                             }
                         }
                         scene = GAME;
@@ -135,6 +146,10 @@ int main(void)
                         ChangeMode(mapSelectionMenu, AIMode);
                         break;
                     default:
+                        break;
+                    case sfKeyTab:
+                        CustomTexture = !CustomTexture;
+                        ChangeTexture(mapSelectionMenu, CustomTexture);
                         break;
                     }
                 }
@@ -146,15 +161,6 @@ int main(void)
                     {
                         switch (event.key.code)
                         {
-                        case sfKeyEnter:
-                            AIMoveInProgess = !AIMoveInProgess;
-                            if (AIMoveInProgess)
-                            {
-                            }
-                            else
-                            {
-                            }
-                            break;
                         case sfKeyBackspace:
                             AIMoveInProgess = false;
                             if (threadLaunched)
@@ -173,79 +179,6 @@ int main(void)
                             printf("Returning to map selection...\n");
                             scene = MAP_SELECTION;
                             break;
-                        default:
-                            break;
-                        }
-                    }
-                    if (AIMoveInProgess && scene == GAME)
-                    {
-                        if (!threadLaunched)
-                        {
-                            sfThread_launch(aiThread);
-                            threadLaunched = true;
-                        }
-
-                        switch (aiData->pathResult)
-                        {
-                        case NO_MOVE_LEFT:
-                            printf("No movement left\n");
-                            AIMoveInProgess = false;
-                            if (threadLaunched)
-                            {
-                                sfThread_terminate(aiThread);
-                                threadLaunched = false;
-                                sfSleep(sfMilliseconds(100));
-                            }
-                            if (aiData->grid != NULL)
-                            {
-                                DestroyGrid(aiData->grid);
-                                aiData->grid = NULL;
-                            }
-                            aiData->step = 0;
-                            aiData->pathResult = NOTHING;
-                            aiData->bot->MoveQueue[0].type = INVALID;
-                            scene = MAP_SELECTION;
-                            break;
-                        case DEAD:
-                            printf("Bot is dead - Fell off the map!\n");
-                            AIMoveInProgess = false;
-                            if (threadLaunched)
-                            {
-                                sfThread_terminate(aiThread);
-                                threadLaunched = false;
-                                sfSleep(sfMilliseconds(100));
-                            }
-                            if (aiData->grid != NULL)
-                            {
-                                DestroyGrid(aiData->grid);
-                                aiData->grid = NULL;
-                            }
-                            aiData->step = 0;
-                            aiData->pathResult = NOTHING;
-                            aiData->bot->MoveQueue[0].type = INVALID;
-                            scene = MAP_SELECTION;
-                            break;
-                        case REACH_END:
-                            printf("======================\n");
-                            printf("SUCCESS! Bot reached the end!\n");
-                            printf("======================\n\n");
-                            AIMoveInProgess = false;
-                            if (threadLaunched)
-                            {
-                                sfThread_terminate(aiThread);
-                                threadLaunched = false;
-                                sfSleep(sfMilliseconds(100));
-                            }
-                            if (aiData->grid != NULL)
-                            {
-                                DestroyGrid(aiData->grid);
-                            }
-                            aiData->step = 0;
-                            aiData->pathResult = NOTHING;
-                            aiData->bot->MoveQueue[0].type = INVALID;
-                            scene = MAP_SELECTION;
-                            break;
-                        case NOTHING:
                         default:
                             break;
                         }
@@ -320,6 +253,81 @@ int main(void)
                 break;
             }
         }
+
+        if (scene == GAME && AIMode && AIMoveInProgess)
+        {
+            if (!threadLaunched)
+            {
+                sfThread_launch(aiThread);
+                threadLaunched = true;
+            }
+
+            switch (aiData->pathResult)
+            {
+            case REACH_END:
+                printf("======================\n");
+                printf("SUCCESS! Bot reached the end!\n");
+                printf("======================\n\n");
+                AIMoveInProgess = false;
+                if (threadLaunched)
+                {
+                    stopAIThread = true;
+                    sfThread_wait(aiThread);
+                    threadLaunched = false;
+                }
+                if (aiData->grid != NULL)
+                {
+                    DestroyGrid(aiData->grid);
+                    aiData->grid = NULL;
+                }
+                aiData->step = 0;
+                aiData->pathResult = NOTHING;
+                aiData->bot->MoveQueue[0].type = INVALID;
+                scene = MAP_SELECTION;
+                break;
+            case NO_MOVE_LEFT:
+                AIMoveInProgess = false;
+                if (threadLaunched)
+                {
+                    stopAIThread = true;
+                    sfThread_wait(aiThread);
+                    threadLaunched = false;
+                }
+                if (aiData->grid != NULL)
+                {
+                    DestroyGrid(aiData->grid);
+                    aiData->grid = NULL;
+                }
+                aiData->step = 0;
+                aiData->pathResult = NOTHING;
+                aiData->bot->MoveQueue[0].type = INVALID;
+                scene = MAP_SELECTION;
+                break;
+            case DEAD:
+                printf("Bot is dead - Fell off the map!\n");
+                AIMoveInProgess = false;
+                if (threadLaunched)
+                {
+                    stopAIThread = true;
+                    sfThread_wait(aiThread);
+                    threadLaunched = false;
+                }
+                if (aiData->grid != NULL)
+                {
+                    DestroyGrid(aiData->grid);
+                    aiData->grid = NULL;
+                }
+                aiData->step = 0;
+                aiData->pathResult = NOTHING;
+                aiData->bot->MoveQueue[0].type = INVALID;
+                scene = MAP_SELECTION;
+                break;
+            case NOTHING:
+            default:
+                break;
+            }
+        }
+
 
         sfRenderWindow_clear(window, sfColor_fromRGB(33, 79, 158));
 

@@ -10,6 +10,7 @@
 static sfTexture* ARROW_TEXTURE;
 static sfTexture* MANUAL_MODE_TEXTURE;
 static sfTexture* AI_MODE_TEXTURE;
+static sfTexture* TAB_TEXTURE;
 
 void LoadAllMapSelectionMenuTextures()
 {
@@ -17,6 +18,7 @@ void LoadAllMapSelectionMenuTextures()
     MANUAL_MODE_TEXTURE = sfTexture_createFromFile("./Assets/Manual_M.png", NULL);
     AI_MODE_TEXTURE = sfTexture_createFromFile("./Assets/AI_M.png", NULL);
     GAME_FONT = sfFont_createFromFile("./Assets/Geo-Regular.ttf");
+    TAB_TEXTURE = sfTexture_createFromFile("./Assets/Tab.png", NULL);
 }
 
 MapSelectionMenu* CreateMapSelectionMenu()
@@ -58,8 +60,38 @@ MapSelectionMenu* CreateMapSelectionMenu()
     sfText_setString(mapSelectionMenu->modeText, "Manual Mode");
     sfText_setPosition(mapSelectionMenu->modeText, (sfVector2f) { 20 + 64 + 5, 20 + 16 });
 
+    //
+
+    mapSelectionMenu->TextureIconSprite = sfSprite_create();
+    sfSprite_setTexture(mapSelectionMenu->TextureIconSprite, TAB_TEXTURE, sfTrue);
+    sfSprite_setPosition(mapSelectionMenu->TextureIconSprite, (sfVector2f) { WINDOW_WIDTH - 64 - 80, 10 });
+
+    mapSelectionMenu->TextureSelect = sfText_create();
+    sfText_setFont(mapSelectionMenu->TextureSelect, GAME_FONT);
+    sfText_setCharacterSize(mapSelectionMenu->TextureSelect, 30);
+    sfText_setColor(mapSelectionMenu->TextureSelect, sfWhite);
+    sfText_setString(mapSelectionMenu->TextureSelect, "Base Texture");
+
+    sfFloatRect textBounds = sfText_getLocalBounds(mapSelectionMenu->TextureSelect);
+    sfText_setOrigin(mapSelectionMenu->TextureSelect, (sfVector2f) { textBounds.width / 2.0f, 0 });
+    sfText_setPosition(mapSelectionMenu->TextureSelect, (sfVector2f) {
+        WINDOW_WIDTH - 64 - 80 + 32, 10 + 40 + 5 });
 
     return mapSelectionMenu;
+}
+
+void ChangeTexture(MapSelectionMenu* mapSelectionMenu, bool customtexture)
+{
+    if (customtexture)
+    {
+        sfText_setString(mapSelectionMenu->TextureSelect, "Custom Texture");
+    }
+    else
+    {
+        sfText_setString(mapSelectionMenu->TextureSelect, "Base Texture");
+    }
+    sfFloatRect textBounds = sfText_getLocalBounds(mapSelectionMenu->TextureSelect);
+    sfText_setOrigin(mapSelectionMenu->TextureSelect, (sfVector2f) { textBounds.width / 2.0f, 0 });
 }
 
 void ChangeMode(MapSelectionMenu* mapSelectionMenu, bool aiMode)
@@ -111,4 +143,8 @@ void DrawMapSelectionMenu(sfRenderWindow* window, MapSelectionMenu* menu)
         sfRenderWindow_drawSprite(window, menu->modeIconSprite, NULL);
     if (menu->modeText)
         sfRenderWindow_drawText(window, menu->modeText, NULL);
+    if (menu->TextureIconSprite)
+        sfRenderWindow_drawSprite(window, menu->TextureIconSprite, NULL);
+    if (menu->TextureSelect)
+        sfRenderWindow_drawText(window, menu->TextureSelect, NULL);
 }

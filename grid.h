@@ -10,7 +10,7 @@ typedef struct Grid
     Cell* cell[20][20];
 } Grid;
 
-Grid* CreateGrid(int gridData[20][20]);
+Grid* CreateGrid(int gridData[20][20], bool CustomTexture);
 
 void DestroyGrid(Grid* grid);
 

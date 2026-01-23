@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 
-Grid* CreateGrid(int gridData[20][20]) {
+Grid* CreateGrid(int gridData[20][20], bool CustomTexture) {
     Grid* grid = (Grid*)malloc(sizeof(Grid));
     if (!grid) {
         printf("ERROR: Failed to allocate Grid!\n");
@@ -11,7 +11,7 @@ Grid* CreateGrid(int gridData[20][20]) {
 
     memset(grid->cell, 0, sizeof(grid->cell));
 
-    LoadAllCellTextures();
+    LoadAllCellTextures(CustomTexture);
 
     for (int i = 0; i < 20; i++) {
         for (int j = 0; j < 20; j++) {
