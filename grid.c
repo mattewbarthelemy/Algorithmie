@@ -1,26 +1,31 @@
-#include "grid.h"
+﻿#include "grid.h"
+#include <stdio.h>
+#include <string.h>
 
-Grid* CreateGrid(int gridData[20][20]) {
+Grid* CreateGrid(int gridData[20][20], bool CustomTexture) {
     Grid* grid = (Grid*)malloc(sizeof(Grid));
     if (!grid) {
+        printf("ERROR: Failed to allocate Grid!\n");
         return NULL;
     }
-    
-    LoadAllCellTextures();
 
-    // Initialize each cell in the grid
+    memset(grid->cell, 0, sizeof(grid->cell));
+
+    LoadAllCellTextures(CustomTexture);
+
     for (int i = 0; i < 20; i++) {
         for (int j = 0; j < 20; j++) {
-            grid->cell[i][j] = CreateCell((sfVector2i){j , i}, CELL_SIZE, (enum CellType)gridData[i][j], gridData);
+            grid->cell[i][j] = CreateCell((sfVector2i) { j, i }, CELL_SIZE, (enum CellType)gridData[i][j], gridData);
             if (!grid->cell[i][j]) {
-                // Cleanup in case of failure
+                printf("ERROR: Failed to create cell at [%d][%d]!\n", i, j);
                 for (int x = 0; x <= i; x++) {
                     for (int y = 0; y < (x == i ? j : 20); y++) {
-                        DestroyCell(grid->cell[x][y]);
+                        if (grid->cell[x][y]) {
+                            DestroyCell(grid->cell[x][y]);
+                            grid->cell[x][y] = NULL;
+                        }
                     }
-                    free(grid->cell[x]);
                 }
-                free(grid->cell);
                 free(grid);
                 return NULL;
             }
@@ -32,22 +37,30 @@ Grid* CreateGrid(int gridData[20][20]) {
 }
 
 void DestroyGrid(Grid* grid) {
-    if (grid) {
-        for (int i = 0; i < 20; i++) {
-            for (int j = 0; j < 20; j++) {
-                DestroyCell(grid->cell[i][j]);
-            }
-            free(grid->cell[i]);
-        }
-        free(grid->cell);
-        free(grid);
+    if (!grid) {
+        return;
     }
+
+    for (int i = 0; i < 20; i++) {
+        for (int j = 0; j < 20; j++) {
+            if (grid->cell[i][j]) {
+                DestroyCell(grid->cell[i][j]);
+                grid->cell[i][j] = NULL;
+            }
+        }
+    }
+
+    free(grid);
 }
 
 void DrawGrid(sfRenderWindow* window, Grid* grid) {
-    if (window && grid) {
-        for (int i = 0; i < 20; i++) {
-            for (int j = 0; j < 20; j++) {
+    if (!window || !grid) {
+        return;
+    }
+
+    for (int i = 0; i < 20; i++) {
+        for (int j = 0; j < 20; j++) {
+            if (grid->cell[i][j]) {
                 DrawCell(window, grid->cell[i][j]);
             }
         }

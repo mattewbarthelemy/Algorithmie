@@ -131,6 +131,7 @@
   <ItemGroup>
     <ClInclude Include="basics.h" />
     <ClInclude Include="Bot.h" />
+    <ClInclude Include="AnimationBot.h" />
     <ClInclude Include="cell.h" />
     <ClInclude Include="grid.h" />
     <ClInclude Include="map.h" />
@@ -138,6 +139,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Bot.c" />
+    <ClCompile Include="AnimationBot.c" />
     <ClCompile Include="cell.c" />
     <ClCompile Include="grid.c" />
     <ClCompile Include="main.c" />

@@ -7,8 +7,8 @@
 #include <SFML/Graphics/Types.h>
 
 #define WINDOW_TITLE "LiteBot"
-#define WINDOW_WIDTH 800    // CELL_SIZE * GRID_COLS
-#define WINDOW_HEIGHT 800   // CELL_SIZE * GRID_ROWS
+#define WINDOW_WIDTH 800
+#define WINDOW_HEIGHT 800
 
 #define GRID_ROWS 20
 #define GRID_COLS 20
@@ -17,9 +17,6 @@
 
 static sfFont* GAME_FONT;
 
-/// <summary>
-/// Use this enum to define some exit codes for the program (just for debug purpose)
-/// </summary>
 enum ExitCode {
     FAILURE = -1,
     SUCCESS = 1,
@@ -30,17 +27,11 @@ enum ExitCode {
     NULL_FONT = 64,
 };
 
-/// <summary>
-/// Use this enum to define the different scenes of the game
-/// </summary>
 enum Scene {
     MAP_SELECTION,
     GAME,
 };
 
-/// <summary>
-/// Use this enum to define the different types of cells in the grid
-/// </summary>
 enum CellType {
     EMPTY,
     WALKABLE,
@@ -49,9 +40,6 @@ enum CellType {
     OBSTACLE,
 };
 
-/// <summary>
-/// Use this enum to define the different directions for movement and cell connections
-/// </summary>
 enum Direction
 {
     NONE = 0,
@@ -72,9 +60,6 @@ enum Direction
     ALL = 33,
 };
 
-/// <summary>
-/// Use this enum to define the different types of movement for the bot
-/// </summary>
 enum MovementType
 {
     INVALID,
@@ -82,9 +67,6 @@ enum MovementType
     JUMP,
 };
 
-/// <summary>
-/// Use this enum to define the different results of a bot movement
-/// </summary>
 enum MoveResult
 {
     NO_MOVE_LEFT = -2,

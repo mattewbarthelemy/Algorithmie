@@ -1,5 +1,6 @@
-#include <SFML/Audio.h>
+﻿#include <SFML/Audio.h>
 #include <SFML/Graphics.h>
+#include <time.h>
 
 #include "basics.h"
 #include "Bot.h"
@@ -7,66 +8,97 @@
 #include "map.h"
 #include "MapSelectionMenu.h"
 
+volatile bool stopAIThread = false;
 
 int main(void)
 {
+    srand(time(NULL));
+
     sfVideoMode mode = { WINDOW_WIDTH, WINDOW_HEIGHT, 32 };
     sfRenderWindow* window;
     sfEvent event;
-
-    /* Create the main window */
     window = sfRenderWindow_create(mode, WINDOW_TITLE, sfClose, NULL);
     if (!window)
     {
         return NULL_WINDOW;
     }
-    
+
+    sfFont* timerFont = sfFont_createFromFile("./Assets/Geo-Regular.ttf");
+    if (!timerFont) {
+        printf("WARNING: Failed to load timer font\n");
+    }
+    sfText* timerText = sfText_create();
+    if (timerFont) sfText_setFont(timerText, timerFont);
+    sfText_setCharacterSize(timerText, 30);
+    sfText_setFillColor(timerText, sfWhite);
+    sfText_setString(timerText, "00:00.00");
+
     MapSelectionMenu* mapSelectionMenu = CreateMapSelectionMenu();
-    
+
     int scene = MAP_SELECTION;
     int currentMap = 0;
     enum MovementType movementType = MOVE_TO;
     bool AIMode = false;
     bool AIMoveInProgess = false;
-    
-    sfThread *aiThread = NULL; // Thread for AI movement
+    bool CustomTexture = false;
+
+    sfThread* aiThread = NULL;
     struct GameData* aiData = (struct GameData*)malloc(sizeof(struct GameData));
+    if (!aiData) {
+        printf("ERROR: Failed to allocate GameData!\n");
+        return FAILURE;
+    }
     aiData->bot = CreateBot();
+    if (!aiData->bot) {
+        printf("ERROR: Failed to create Bot!\n");
+        free(aiData);
+        return FAILURE;
+    }
     aiData->grid = NULL;
     aiData->step = 0;
     aiData->pathResult = NOTHING;
+    aiData->timer = sfClock_create();
+    aiData->elapsedTime = 0.0f;
+    aiData->timerRunning = false;
     aiThread = sfThread_create(MoveBot_AI, aiData);
     bool threadLaunched = false;
-    
-    Map maps[20];
-    for (int i = 0; i < 20; i++) // Initialize all maps to empty
+
+    Map* maps = (Map*)malloc(20 * sizeof(Map));
+    if (!maps) {
+        printf("ERROR: Failed to allocate maps!");
+            return FAILURE;
+    }
+    for (int i = 0; i < 20; i++)
     {
         maps[i] = CreateMap("Empty", MAP_NULL);
     }
-    
-    // Define actual maps
+
     maps[0] = CreateMap("The Line", MAP_01);
     maps[1] = CreateMap("OBSTACLES !", MAP_02);
     maps[2] = CreateMap("The S", MAP_03);
     maps[3] = CreateMap("Make a Choice", MAP_04);
     maps[4] = CreateMap("The Maze", MAP_05);
-    // Add more maps as needed here
-    
+    maps[5] = CreateMap("Easy", MAP_06);
+    maps[6] = CreateMap("The Snake", MAP_07);
+    maps[7] = CreateMap("Lost", MAP_08);
+    maps[8] = CreateMap("The Chaos", MAP_09);
+    maps[9] = CreateMap("The Maze 2", MAP_10);
+    maps[10] = CreateMap("The Dungeon", MAP_11);
+    maps[11] = CreateMap("The Slime", MAP_12);
+    maps[12] = CreateMap("Interstellar", MAP_13);
+    maps[13] = CreateMap("Crazy World", MAP_14);
+
     ChangeMap(mapSelectionMenu, &maps[currentMap]);
-    
-    /* Start the game loop */
+
     while (sfRenderWindow_isOpen(window))
     {
-        /* Process events */
         while (sfRenderWindow_pollEvent(window, &event))
         {
-            /* Close window : exit */
             if (event.type == sfEvtClosed)
             {
                 sfRenderWindow_close(window);
             }
 
-            // Handle input based on current scene
             switch (scene) {
             case MAP_SELECTION:
                 if (event.type == sfEvtKeyPressed)
@@ -86,12 +118,47 @@ int main(void)
                         ChangeMap(mapSelectionMenu, &maps[currentMap]);
                         break;
                     case sfKeyEnter:
-                        aiData->grid = CreateGrid(maps[currentMap].data);
+                        if (threadLaunched)
+                        {
+                            sfThread_terminate(aiThread);
+                            threadLaunched = false;
+                            sfSleep(sfMilliseconds(100));
+                        }
+
+                        if (aiData->grid != NULL)
+                        {
+                            DestroyGrid(aiData->grid);
+                            aiData->grid = NULL;
+                        }
+
+                        aiData->grid = CreateGrid(maps[currentMap].data, CustomTexture);
+                        if (!aiData->grid) {
+                            printf("ERROR: Failed to create grid!\n");
+                            scene = MAP_SELECTION;
+                            break;
+                        }
                         SpawnBotAtStartCell(aiData->bot, aiData->grid);
+
+                        aiData->bot->MoveQueue[0].type = INVALID;
+                        aiData->step = 0;
+                        aiData->pathResult = NOTHING;
+                        stopAIThread = false;
+
+                        sfClock_restart(aiData->timer);
+                        aiData->elapsedTime = 0.0f;
+                        aiData->timerRunning = true;
+
                         if (AIMode)
                         {
-                            printf("AI is searching for a path !\n"); // Call function for Pathfinding here (if it need to precompute path)
-                            aiData->step = 0;
+                            bool found = SearchPath_AI(aiData->bot, aiData->grid);
+                            if (!found)
+                            {
+                                printf("No path found by AI\n");
+                            }
+                            if (found)
+                            {
+                                AIMoveInProgess = true;
+                            }
                         }
                         scene = GAME;
                         break;
@@ -100,6 +167,10 @@ int main(void)
                         ChangeMode(mapSelectionMenu, AIMode);
                         break;
                     default:
+                        break;
+                    case sfKeyTab:
+                        CustomTexture = !CustomTexture;
+                        ChangeTexture(mapSelectionMenu, CustomTexture);
                         break;
                     }
                 }
@@ -111,49 +182,37 @@ int main(void)
                     {
                         switch (event.key.code)
                         {
-                        case sfKeyEnter:
-                            AIMoveInProgess = !AIMoveInProgess;
-                            break;
                         case sfKeyBackspace:
+                            AIMoveInProgess = false;
+
+                            // Arrêter le timer
+                            if (aiData->timerRunning) {
+                                aiData->elapsedTime = sfTime_asSeconds(sfClock_getElapsedTime(aiData->timer));
+                                aiData->timerRunning = false;
+                            }
+
+                            if (threadLaunched)
+                            {
+                                sfThread_terminate(aiThread);
+                                threadLaunched = false;
+                                sfSleep(sfMilliseconds(100));
+                            }
+                            if (aiData->grid != NULL)
+                            {
+                                DestroyGrid(aiData->grid);
+                                aiData->grid = NULL;
+                            }
+                            aiData->step = 0;
+                            aiData->pathResult = NOTHING;
+                            printf("Returning to map selection...\n");
                             scene = MAP_SELECTION;
                             break;
                         default:
                             break;
                         }
                     }
-                    if (AIMoveInProgess && scene == GAME)
-                    {
-                        // Search for path if not done yet
-                        
-                        if (!threadLaunched)
-                        {
-                            sfThread_launch(aiThread);
-                            threadLaunched = true;
-                        }
-                        
-                        switch(aiData->pathResult)
-                        {
-                        case NO_MOVE_LEFT:
-                            printf("No movement left\n");
-                            sfThread_terminate(aiThread);
-                            scene = MAP_SELECTION;
-                            break;
-                        case DEAD:
-                            printf("Bot is dead\n");
-                            sfThread_terminate(aiThread);
-                            scene = MAP_SELECTION;
-                            break;
-                        case REACH_END:
-                            printf("Congratulations ! Bot reach the end !\n");
-                            sfThread_terminate(aiThread);
-                            scene = MAP_SELECTION;
-                            break;
-                        case NOTHING:
-                        default:
-                            break;
-                        }
-                    }
-                } else
+                }
+                else
                 {
                     if (event.type == sfEvtKeyPressed)
                     {
@@ -161,6 +220,17 @@ int main(void)
                         switch (event.key.code)
                         {
                         case sfKeyBackspace:
+                            // Arrêter le timer
+                            if (aiData->timerRunning) {
+                                aiData->elapsedTime = sfTime_asSeconds(sfClock_getElapsedTime(aiData->timer));
+                                aiData->timerRunning = false;
+                            }
+
+                            if (aiData->grid != NULL)
+                            {
+                                DestroyGrid(aiData->grid);
+                                aiData->grid = NULL;
+                            }
                             scene = MAP_SELECTION;
                             break;
                         case sfKeyRight:
@@ -181,6 +251,7 @@ int main(void)
                             break;
                         case sfKeySpace:
                             movementType = JUMP;
+                            printf("JUMP Ready!\n");
                             break;
                         default:
                             break;
@@ -188,11 +259,35 @@ int main(void)
                         switch (result)
                         {
                         case DEAD:
-                            printf("Unfortunately you fell of the parkour..\n");
+                            printf("Unfortunately you fell off the parkour..\n");
+
+                            // Arrêter le timer
+                            if (aiData->timerRunning) {
+                                aiData->elapsedTime = sfTime_asSeconds(sfClock_getElapsedTime(aiData->timer));
+                                aiData->timerRunning = false;
+                            }
+
+                            if (aiData->grid != NULL)
+                            {
+                                DestroyGrid(aiData->grid);
+                                aiData->grid = NULL;
+                            }
                             scene = MAP_SELECTION;
                             break;
                         case REACH_END:
-                            printf("Congratulations ! You reach the end !\n");
+                            printf("Congratulations! You reached the end!\n");
+
+                            // Arrêter le timer
+                            if (aiData->timerRunning) {
+                                aiData->elapsedTime = sfTime_asSeconds(sfClock_getElapsedTime(aiData->timer));
+                                aiData->timerRunning = false;
+                            }
+
+                            if (aiData->grid != NULL)
+                            {
+                                DestroyGrid(aiData->grid);
+                                aiData->grid = NULL;
+                            }
                             scene = MAP_SELECTION;
                             break;
                         case NOTHING:
@@ -207,30 +302,175 @@ int main(void)
             }
         }
 
+        if (scene == GAME && AIMode && AIMoveInProgess)
+        {
+            if (!threadLaunched)
+            {
+                sfThread_launch(aiThread);
+                threadLaunched = true;
+            }
 
-        /* Clear the screen */
+            switch (aiData->pathResult)
+            {
+            case REACH_END:
+                printf("======================\n");
+                printf("SUCCESS! Bot reached the end!\n");
+                printf("======================\n\n");
+
+                // Arrêter le timer
+                if (aiData->timerRunning) {
+                    aiData->elapsedTime = sfTime_asSeconds(sfClock_getElapsedTime(aiData->timer));
+                    aiData->timerRunning = false;
+                }
+
+                AIMoveInProgess = false;
+                if (threadLaunched)
+                {
+                    stopAIThread = true;
+                    sfThread_wait(aiThread);
+                    threadLaunched = false;
+                }
+                if (aiData->grid != NULL)
+                {
+                    DestroyGrid(aiData->grid);
+                    aiData->grid = NULL;
+                }
+                aiData->step = 0;
+                aiData->pathResult = NOTHING;
+                aiData->bot->MoveQueue[0].type = INVALID;
+                scene = MAP_SELECTION;
+                break;
+            case NO_MOVE_LEFT:
+                AIMoveInProgess = false;
+                if (threadLaunched)
+                {
+                    stopAIThread = true;
+                    sfThread_wait(aiThread);
+                    threadLaunched = false;
+                }
+                if (aiData->grid != NULL)
+                {
+                    DestroyGrid(aiData->grid);
+                    aiData->grid = NULL;
+                }
+                aiData->step = 0;
+                aiData->pathResult = NOTHING;
+                aiData->bot->MoveQueue[0].type = INVALID;
+                scene = MAP_SELECTION;
+                break;
+            case DEAD:
+                printf("Bot is dead - Fell off the map!\n");
+
+                // Arrêter le timer
+                if (aiData->timerRunning) {
+                    aiData->elapsedTime = sfTime_asSeconds(sfClock_getElapsedTime(aiData->timer));
+                    aiData->timerRunning = false;
+                }
+
+                AIMoveInProgess = false;
+                if (threadLaunched)
+                {
+                    stopAIThread = true;
+                    sfThread_wait(aiThread);
+                    threadLaunched = false;
+                }
+                if (aiData->grid != NULL)
+                {
+                    DestroyGrid(aiData->grid);
+                    aiData->grid = NULL;
+                }
+                aiData->step = 0;
+                aiData->pathResult = NOTHING;
+                aiData->bot->MoveQueue[0].type = INVALID;
+                scene = MAP_SELECTION;
+                break;
+            case NOTHING:
+            default:
+                break;
+            }
+        }
+
+
         sfRenderWindow_clear(window, sfColor_fromRGB(33, 79, 158));
 
-        // Draw everything here
         switch (scene) {
         case MAP_SELECTION:
             DrawMapSelectionMenu(window, mapSelectionMenu);
             break;
         case GAME:
-            DrawGrid(window, aiData->grid);
-            DrawBot(window, aiData->bot);
+            if (aiData->grid != NULL)
+            {
+                UpdateAnimation(aiData->bot->animation, aiData->bot->sprite);
+
+                if (aiData->bot->animation && aiData->bot->animation->isPlaying && aiData->bot->animation->clock) {
+                    sfTime elapsed = sfClock_getElapsedTime(aiData->bot->animation->clock);
+                    if (sfTime_asSeconds(elapsed) > 0.6f && !AIMoveInProgess) {
+                        StopAnimation(aiData->bot->animation, aiData->bot->sprite);
+                    }
+                }
+
+                DrawGrid(window, aiData->grid);
+                DrawBot(window, aiData->bot);
+
+            }
             break;
         }
 
-        /* Update the window */
+        // Afficher le timer (dans toutes les scènes)
+        float displayTime;
+        if (aiData->timerRunning) {
+            displayTime = sfTime_asSeconds(sfClock_getElapsedTime(aiData->timer));
+        }
+        else {
+            displayTime = aiData->elapsedTime;
+        }
+
+        int minutes = (int)(displayTime / 60);
+        int seconds = (int)displayTime % 60;
+        int centiseconds = (int)((displayTime - (int)displayTime) * 100);
+
+        char timerString[32];
+        sprintf_s(timerString, sizeof(timerString), "%02d:%02d.%02d", minutes, seconds, centiseconds);
+        sfText_setString(timerText, timerString);
+
+        sfFloatRect textBounds = sfText_getLocalBounds(timerText);
+        float textX = (WINDOW_WIDTH - textBounds.width) / 2.0f;
+        sfText_setPosition(timerText, (sfVector2f) { textX, 10.0f });
+
+        sfRenderWindow_drawText(window, timerText, NULL);
+
         sfRenderWindow_display(window);
     }
 
-    /* Cleanup resources */
-    DestroyGrid(aiData->grid);
+    if (threadLaunched)
+    {
+        sfThread_terminate(aiThread);
+    }
+    sfThread_destroy(aiThread);
+
+    if (aiData->grid != NULL)
+    {
+        DestroyGrid(aiData->grid);
+    }
+
+    if (aiData->timer) {
+        sfClock_destroy(aiData->timer);
+    }
+
     DestroyBot(aiData->bot);
+    free(aiData);
+
+    if (timerText) {
+        sfText_destroy(timerText);
+    }
+    if (timerFont) {
+        sfFont_destroy(timerFont);
+    }
+
     DestroyMapSelectionMenu(mapSelectionMenu);
     sfRenderWindow_destroy(window);
+
+    free(maps);
 
     return SUCCESS;
 }

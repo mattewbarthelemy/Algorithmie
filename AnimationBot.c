@@ -1,0 +1,197 @@
+#include "AnimationBot.h"
+#include <stdlib.h>
+#include <stdio.h>
+
+BotAnimation* CreateBotAnimation(float speed)
+{
+    BotAnimation* anim = (BotAnimation*)malloc(sizeof(BotAnimation));
+    if (!anim) {
+        printf("ERROR: Failed to allocate BotAnimation!\n");
+        return NULL;
+    }
+
+    for (int i = 0; i < ANIMATION_FRAMES; i++) {
+        anim->framesLeft[i] = NULL;
+        anim->framesRight[i] = NULL;
+    }
+
+    anim->currentFrame = 0;
+    anim->currentDirection = ANIM_RIGHT;
+    anim->speed = speed;
+    anim->isPlaying = true;
+
+    anim->clock = sfClock_create();
+    if (!anim->clock) {
+        printf("ERROR: Failed to create animation clock!\n");
+        free(anim);
+        return NULL;
+    }
+
+    return anim;
+}
+
+bool LoadAnimationFrames(BotAnimation* anim)
+{
+    if (!anim) return false;
+
+    printf("=== Chargement des animations ===\n");
+
+    anim->framesLeft[0] = sfTexture_createFromFile("./Assets/Characters/Move_Left/Bot_L0.png", NULL);
+    anim->framesLeft[1] = sfTexture_createFromFile("./Assets/Characters/Move_Left/Bot_L1.png", NULL);
+    anim->framesLeft[2] = sfTexture_createFromFile("./Assets/Characters/Move_Left/Bot_L2.png", NULL);
+    anim->framesLeft[3] = sfTexture_createFromFile("./Assets/Characters/Move_Left/Bot_L3.png", NULL);
+    anim->framesLeft[4] = sfTexture_createFromFile("./Assets/Characters/Move_Left/Bot_L4.png", NULL);
+
+    anim->framesRight[0] = sfTexture_createFromFile("./Assets/Characters/Move_Right/Bot_R0.png", NULL);
+    anim->framesRight[1] = sfTexture_createFromFile("./Assets/Characters/Move_Right/Bot_R1.png", NULL);
+    anim->framesRight[2] = sfTexture_createFromFile("./Assets/Characters/Move_Right/Bot_R2.png", NULL);
+    anim->framesRight[3] = sfTexture_createFromFile("./Assets/Characters/Move_Right/Bot_R3.png", NULL);
+    anim->framesRight[4] = sfTexture_createFromFile("./Assets/Characters/Move_Right/Bot_R4.png", NULL);
+
+    bool leftOk = true, rightOk = true;
+
+    for (int i = 0; i < ANIMATION_FRAMES; i++) {
+        if (anim->framesLeft[i]) {
+            printf("Left Frame %d OK\n", i);
+        }
+        else {
+            printf("WARNING: Left Frame %d failed\n", i);
+            leftOk = false;
+        }
+
+        if (anim->framesRight[i]) {
+            printf("Right Frame %d OK\n", i);
+        }
+        else {
+            printf("WARNING: Right Frame %d failed\n", i);
+            rightOk = false;
+        }
+    }
+
+    if (leftOk && rightOk) {
+        printf("=== Toutes les animations chargees ! ===\n");
+    }
+
+    return leftOk && rightOk;
+}
+
+void UpdateAnimation(BotAnimation* anim, sfSprite* sprite)
+{
+    if (!anim || !sprite) return;
+
+    if (anim->isPlaying) {
+        sfTime elapsed = sfClock_getElapsedTime(anim->clock);
+        float seconds = sfTime_asSeconds(elapsed);
+
+        if (seconds >= anim->speed) {
+            anim->currentFrame = (anim->currentFrame + 1) % ANIMATION_FRAMES;
+
+            sfTexture* currentTexture = NULL;
+            if (anim->currentDirection == ANIM_LEFT) {
+                currentTexture = anim->framesLeft[anim->currentFrame];
+            }
+            else {
+                currentTexture = anim->framesRight[anim->currentFrame];
+            }
+
+            if (currentTexture) {
+                sfSprite_setTexture(sprite, currentTexture, sfTrue);
+            }
+
+            sfClock_restart(anim->clock);
+        }
+    }
+}
+
+void StartAnimation(BotAnimation* anim)
+{
+    if (!anim) return;
+
+    anim->isPlaying = true;
+    if (anim->clock) {
+        sfClock_restart(anim->clock);
+    }
+}
+
+void StopAnimation(BotAnimation* anim, sfSprite* sprite)
+{
+    if (!anim) return;
+
+    anim->isPlaying = false;
+    anim->currentFrame = 0;
+
+    if (sprite) {
+        sfTexture* firstFrame = NULL;
+        if (anim->currentDirection == ANIM_LEFT) {
+            firstFrame = anim->framesLeft[0];
+        }
+        else {
+            firstFrame = anim->framesRight[0];
+        }
+
+        if (firstFrame) {
+            sfSprite_setTexture(sprite, firstFrame, sfTrue);
+        }
+    }
+}
+
+void SetAnimationDirection(BotAnimation* anim, AnimDirection direction, sfSprite* sprite)
+{
+    if (!anim) return;
+
+    if (anim->currentDirection != direction) {
+        anim->currentDirection = direction;
+        anim->currentFrame = 0;
+        if (anim->clock) {
+            sfClock_restart(anim->clock);
+        }
+
+        if (sprite) {
+            sfTexture* newTexture = NULL;
+            if (direction == ANIM_LEFT) {
+                newTexture = anim->framesLeft[0];
+            }
+            else {
+                newTexture = anim->framesRight[0];
+            }
+
+            if (newTexture) {
+                sfSprite_setTexture(sprite, newTexture, sfTrue);
+            }
+        }
+    }
+}
+
+void DestroyBotAnimation(BotAnimation* anim)
+{
+    if (!anim) return;
+
+    for (int i = 0; i < ANIMATION_FRAMES; i++) {
+        if (anim->framesLeft[i]) {
+            sfTexture_destroy(anim->framesLeft[i]);
+            anim->framesLeft[i] = NULL;
+        }
+        if (anim->framesRight[i]) {
+            sfTexture_destroy(anim->framesRight[i]);
+            anim->framesRight[i] = NULL;
+        }
+    }
+
+    if (anim->clock) {
+        sfClock_destroy(anim->clock);
+    }
+
+    free(anim);
+}
+
+int GetCurrentFrame(BotAnimation* anim)
+{
+    if (!anim) return 0;
+    return anim->currentFrame;
+}
+
+void SetAnimationSpeed(BotAnimation* anim, float speed)
+{
+    if (!anim) return;
+    anim->speed = speed;
+}
