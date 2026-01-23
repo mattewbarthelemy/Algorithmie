@@ -19,6 +19,14 @@ static sfTexture* WALKABLE_CROSSROAD_CELL_TEXTURE = NULL;
 static sfTexture* WALKABLE_CELL_TEXTURE = NULL;
 static sfTexture* START_CELL_TEXTURE = NULL;
 static sfTexture* END_CELL_TEXTURE = NULL;
+static sfTexture* OBSTACLE_NORTH_EAST_CELL_TEXTURE = NULL;
+static sfTexture* OBSTACLE_NORTH_WEST_CELL_TEXTURE = NULL;
+static sfTexture* OBSTACLE_SOUTH_EAST_CELL_TEXTURE = NULL;
+static sfTexture* OBSTACLE_SOUTH_WEST_CELL_TEXTURE = NULL;
+static sfTexture* OBSTACLE_T_JUNCTION_NORTH_CELL_TEXTURE = NULL;
+static sfTexture* OBSTACLE_T_JUNCTION_SOUTH_CELL_TEXTURE = NULL;
+static sfTexture* OBSTACLE_T_JUNCTION_EAST_CELL_TEXTURE = NULL;
+static sfTexture* OBSTACLE_T_JUNCTION_WEST_CELL_TEXTURE = NULL;
 static sfTexture* OBSTACLE_NORTH_SOUTH_CELL_TEXTURE = NULL;
 static sfTexture* OBSTACLE_EAST_WEST_CELL_TEXTURE = NULL;
 static sfTexture* OBSTACLE_CROSSROAD_CELL_TEXTURE = NULL;
@@ -44,9 +52,17 @@ void LoadAllCellTextures(bool CustomTexture) {
         WALKABLE_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Custom Style/Walkable.png", NULL);
         START_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Custom Style/Start.png", NULL);
         END_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Custom Style/End.png", NULL);
+        OBSTACLE_NORTH_EAST_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Custom Style/Walkable_North_East.png", NULL);
+        OBSTACLE_NORTH_WEST_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Custom Style/Walkable_North_West.png", NULL);
+        OBSTACLE_SOUTH_EAST_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Custom Style/Walkable_South_East.png", NULL);
+        OBSTACLE_SOUTH_WEST_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Custom Style/Walkable_South_West.png", NULL);
         OBSTACLE_NORTH_SOUTH_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Custom Style/Obstacle_North_South.png", NULL);
         OBSTACLE_EAST_WEST_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Custom Style/Obstacle_East_West.png", NULL);
         OBSTACLE_CROSSROAD_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Custom Style/Obstacle_Crossroad.png", NULL);
+        OBSTACLE_T_JUNCTION_NORTH_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Custom Style/Obstacle_T_Junction_North.png", NULL);
+        OBSTACLE_T_JUNCTION_SOUTH_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Custom Style/Obstacle_T_Junction_South.png", NULL);
+        OBSTACLE_T_JUNCTION_EAST_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Custom Style/Obstacle_T_Junction_East.png", NULL);
+        OBSTACLE_T_JUNCTION_WEST_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Custom Style/Obstacle_T_Junction_West.png", NULL);
         DECORATION_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Custom Style/Tree.png", NULL);
     }
     else
@@ -68,9 +84,17 @@ void LoadAllCellTextures(bool CustomTexture) {
         WALKABLE_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Style A/Walkable.png", NULL);
         START_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Style A/Start.png", NULL);
         END_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Style A/End.png", NULL);
+        OBSTACLE_NORTH_EAST_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Style A/Walkable_North_East.png", NULL);
+        OBSTACLE_NORTH_WEST_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Style A/Walkable_North_West.png", NULL);
+        OBSTACLE_SOUTH_EAST_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Style A/Walkable_South_East.png", NULL);
+        OBSTACLE_SOUTH_WEST_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Style A/Walkable_South_West.png", NULL);
         OBSTACLE_NORTH_SOUTH_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Style A/Obstacle_North_South.png", NULL);
         OBSTACLE_EAST_WEST_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Style A/Obstacle_East_West.png", NULL);
         OBSTACLE_CROSSROAD_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Style A/Obstacle_Crossroad.png", NULL);
+        OBSTACLE_T_JUNCTION_NORTH_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Style A/Obstacle_T_Junction_North.png", NULL);
+        OBSTACLE_T_JUNCTION_SOUTH_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Style A/Obstacle_T_Junction_South.png", NULL);
+        OBSTACLE_T_JUNCTION_EAST_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Style A/Obstacle_T_Junction_East.png", NULL);
+        OBSTACLE_T_JUNCTION_WEST_CELL_TEXTURE = sfTexture_createFromFile("./Assets/Tiles/Style A/Obstacle_T_Junction_West.png", NULL);
         DECORATION_TEXTURE = NULL;
     }
     printf("Texture Loaded !\n");
@@ -242,11 +266,16 @@ void GetRequiredSpriteForCell(Cell* cell, int grid[20][20]) {
         case NORTH:
         case SOUTH:
         case SOUTH_EAST:
+            texture = OBSTACLE_SOUTH_EAST_CELL_TEXTURE;
+            break;
         case SOUTH_WEST:
+            texture = OBSTACLE_SOUTH_WEST_CELL_TEXTURE;
+            break;
         case NORTH_EAST:
+            texture = OBSTACLE_NORTH_EAST_CELL_TEXTURE;
+            break;
         case NORTH_WEST:
-        default:
-            texture = EMPTY_CELL_TEXTURE;
+            texture = OBSTACLE_NORTH_WEST_CELL_TEXTURE;
             break;
         case EAST_WEST:
             texture = OBSTACLE_EAST_WEST_CELL_TEXTURE;
@@ -254,10 +283,26 @@ void GetRequiredSpriteForCell(Cell* cell, int grid[20][20]) {
         case NORTH_SOUTH:
             texture = OBSTACLE_NORTH_SOUTH_CELL_TEXTURE;
             break;
+        case NORTH_EAST_WEST:
+            texture = OBSTACLE_T_JUNCTION_NORTH_CELL_TEXTURE;
+            break;
+        case SOUTH_EAST_WEST:
+            texture = OBSTACLE_T_JUNCTION_SOUTH_CELL_TEXTURE;
+            break;
+        case NORTH_SOUTH_EAST:
+            texture = OBSTACLE_T_JUNCTION_EAST_CELL_TEXTURE;
+            break;
+        case NORTH_SOUTH_WEST:
+            texture = OBSTACLE_T_JUNCTION_WEST_CELL_TEXTURE;
+            break;
         case ALL:
             texture = OBSTACLE_CROSSROAD_CELL_TEXTURE;
             break;
+        default:
+            texture = EMPTY_CELL_TEXTURE;
+            break;
         }
+
         break;
     default:
         break;

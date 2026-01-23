@@ -23,6 +23,16 @@ int main(void)
         return NULL_WINDOW;
     }
 
+    sfFont* timerFont = sfFont_createFromFile("./Assets/Geo-Regular.ttf");
+    if (!timerFont) {
+        printf("WARNING: Failed to load timer font\n");
+    }
+    sfText* timerText = sfText_create();
+    if (timerFont) sfText_setFont(timerText, timerFont);
+    sfText_setCharacterSize(timerText, 30);
+    sfText_setFillColor(timerText, sfWhite);
+    sfText_setString(timerText, "00:00.00");
+
     MapSelectionMenu* mapSelectionMenu = CreateMapSelectionMenu();
 
     int scene = MAP_SELECTION;
@@ -47,6 +57,9 @@ int main(void)
     aiData->grid = NULL;
     aiData->step = 0;
     aiData->pathResult = NOTHING;
+    aiData->timer = sfClock_create();
+    aiData->elapsedTime = 0.0f;
+    aiData->timerRunning = false;
     aiThread = sfThread_create(MoveBot_AI, aiData);
     bool threadLaunched = false;
 
@@ -127,6 +140,10 @@ int main(void)
                         aiData->pathResult = NOTHING;
                         stopAIThread = false;
 
+                        sfClock_restart(aiData->timer);
+                        aiData->elapsedTime = 0.0f;
+                        aiData->timerRunning = true;
+
                         if (AIMode)
                         {
                             bool found = SearchPath_AI(aiData->bot, aiData->grid);
@@ -163,6 +180,13 @@ int main(void)
                         {
                         case sfKeyBackspace:
                             AIMoveInProgess = false;
+
+                            // Arrêter le timer
+                            if (aiData->timerRunning) {
+                                aiData->elapsedTime = sfTime_asSeconds(sfClock_getElapsedTime(aiData->timer));
+                                aiData->timerRunning = false;
+                            }
+
                             if (threadLaunched)
                             {
                                 sfThread_terminate(aiThread);
@@ -192,6 +216,12 @@ int main(void)
                         switch (event.key.code)
                         {
                         case sfKeyBackspace:
+                            // Arrêter le timer
+                            if (aiData->timerRunning) {
+                                aiData->elapsedTime = sfTime_asSeconds(sfClock_getElapsedTime(aiData->timer));
+                                aiData->timerRunning = false;
+                            }
+
                             if (aiData->grid != NULL)
                             {
                                 DestroyGrid(aiData->grid);
@@ -226,6 +256,13 @@ int main(void)
                         {
                         case DEAD:
                             printf("Unfortunately you fell off the parkour..\n");
+
+                            // Arrêter le timer
+                            if (aiData->timerRunning) {
+                                aiData->elapsedTime = sfTime_asSeconds(sfClock_getElapsedTime(aiData->timer));
+                                aiData->timerRunning = false;
+                            }
+
                             if (aiData->grid != NULL)
                             {
                                 DestroyGrid(aiData->grid);
@@ -235,6 +272,13 @@ int main(void)
                             break;
                         case REACH_END:
                             printf("Congratulations! You reached the end!\n");
+
+                            // Arrêter le timer
+                            if (aiData->timerRunning) {
+                                aiData->elapsedTime = sfTime_asSeconds(sfClock_getElapsedTime(aiData->timer));
+                                aiData->timerRunning = false;
+                            }
+
                             if (aiData->grid != NULL)
                             {
                                 DestroyGrid(aiData->grid);
@@ -268,6 +312,13 @@ int main(void)
                 printf("======================\n");
                 printf("SUCCESS! Bot reached the end!\n");
                 printf("======================\n\n");
+
+                // Arrêter le timer
+                if (aiData->timerRunning) {
+                    aiData->elapsedTime = sfTime_asSeconds(sfClock_getElapsedTime(aiData->timer));
+                    aiData->timerRunning = false;
+                }
+
                 AIMoveInProgess = false;
                 if (threadLaunched)
                 {
@@ -305,6 +356,13 @@ int main(void)
                 break;
             case DEAD:
                 printf("Bot is dead - Fell off the map!\n");
+
+                // Arrêter le timer
+                if (aiData->timerRunning) {
+                    aiData->elapsedTime = sfTime_asSeconds(sfClock_getElapsedTime(aiData->timer));
+                    aiData->timerRunning = false;
+                }
+
                 AIMoveInProgess = false;
                 if (threadLaunched)
                 {
@@ -349,9 +407,33 @@ int main(void)
 
                 DrawGrid(window, aiData->grid);
                 DrawBot(window, aiData->bot);
+
             }
             break;
         }
+
+        // Afficher le timer (dans toutes les scènes)
+        float displayTime;
+        if (aiData->timerRunning) {
+            displayTime = sfTime_asSeconds(sfClock_getElapsedTime(aiData->timer));
+        }
+        else {
+            displayTime = aiData->elapsedTime;
+        }
+
+        int minutes = (int)(displayTime / 60);
+        int seconds = (int)displayTime % 60;
+        int centiseconds = (int)((displayTime - (int)displayTime) * 100);
+
+        char timerString[32];
+        sprintf_s(timerString, sizeof(timerString), "%02d:%02d.%02d", minutes, seconds, centiseconds);
+        sfText_setString(timerText, timerString);
+
+        sfFloatRect textBounds = sfText_getLocalBounds(timerText);
+        float textX = (WINDOW_WIDTH - textBounds.width) / 2.0f;
+        sfText_setPosition(timerText, (sfVector2f) { textX, 10.0f });
+
+        sfRenderWindow_drawText(window, timerText, NULL);
 
         sfRenderWindow_display(window);
     }
@@ -366,8 +448,21 @@ int main(void)
     {
         DestroyGrid(aiData->grid);
     }
+
+    if (aiData->timer) {
+        sfClock_destroy(aiData->timer);
+    }
+
     DestroyBot(aiData->bot);
     free(aiData);
+
+    if (timerText) {
+        sfText_destroy(timerText);
+    }
+    if (timerFont) {
+        sfFont_destroy(timerFont);
+    }
+
     DestroyMapSelectionMenu(mapSelectionMenu);
     sfRenderWindow_destroy(window);
 

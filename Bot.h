@@ -32,6 +32,9 @@ struct GameData
     Grid* grid;
     int step;
     int pathResult;
+    sfClock* timer;
+    float elapsedTime;
+    bool timerRunning;
 };
 
 struct Bot* CreateBot();
